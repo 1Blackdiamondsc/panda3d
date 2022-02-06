@@ -256,10 +256,7 @@ class Actor(DirectObject, NodePath):
                     if isinstance(models[next(iter(models))], dict):
                         # then it must be a multipart actor w/LOD
                         self.setLODNode(node = lodNode)
-                        # preserve numerical order for lod's
-                        # this will make it easier to set ranges
-                        sortedKeys = list(models.keys())
-                        sortedKeys.sort()
+                        sortedKeys = sorted(models.keys())
                         for lodName in sortedKeys:
                             # make a node under the LOD switch
                             # for each lod (just because!)
@@ -269,7 +266,6 @@ class Actor(DirectObject, NodePath):
                                 self.loadModel(models[lodName][modelName],
                                                modelName, lodName, copy = copy,
                                                okMissing = okMissing)
-                    # then if there is a dictionary of dictionaries of anims
                     elif isinstance(anims[next(iter(anims))], dict):
                         # then this is a multipart actor w/o LOD
                         for partName in models:
@@ -279,9 +275,7 @@ class Actor(DirectObject, NodePath):
                     else:
                         # it is a single part actor w/LOD
                         self.setLODNode(node = lodNode)
-                        # preserve order of LOD's
-                        sortedKeys = list(models.keys())
-                        sortedKeys.sort()
+                        sortedKeys = sorted(models.keys())
                         for lodName in sortedKeys:
                             self.addLOD(str(lodName))
                             # pass in dictionary of parts
@@ -293,34 +287,29 @@ class Actor(DirectObject, NodePath):
 
             # load anims
             # make sure the actor has animations
-            if anims:
-                if len(anims) >= 1:
+            if anims and len(anims) >= 1:
                     # if so, does it have a dictionary of dictionaries?
-                    if isinstance(anims[next(iter(anims))], dict):
+                if isinstance(anims[next(iter(anims))], dict):
                         # are the models a dict of dicts too?
-                        if isinstance(models, dict):
-                            if isinstance(models[next(iter(models))], dict):
-                                # then we have a multi-part w/ LOD
-                                sortedKeys = list(models.keys())
-                                sortedKeys.sort()
-                                for lodName in sortedKeys:
-                                    # iterate over both dicts
-                                    for partName in anims:
-                                        self.loadAnims(
-                                            anims[partName], partName, lodName)
-                            else:
-                                # then it must be multi-part w/o LOD
+                    if isinstance(models, dict):
+                        if isinstance(models[next(iter(models))], dict):
+                            sortedKeys = sorted(models.keys())
+                            for lodName in sortedKeys:
+                                # iterate over both dicts
                                 for partName in anims:
-                                    self.loadAnims(anims[partName], partName)
-                    elif isinstance(models, dict):
-                        # then we have single-part w/ LOD
-                        sortedKeys = list(models.keys())
-                        sortedKeys.sort()
-                        for lodName in sortedKeys:
-                            self.loadAnims(anims, lodName=lodName)
-                    else:
-                        # else it is single-part w/o LOD
-                        self.loadAnims(anims)
+                                    self.loadAnims(
+                                        anims[partName], partName, lodName)
+                        else:
+                            # then it must be multi-part w/o LOD
+                            for partName in anims:
+                                self.loadAnims(anims[partName], partName)
+                elif isinstance(models, dict):
+                    sortedKeys = sorted(models.keys())
+                    for lodName in sortedKeys:
+                        self.loadAnims(anims, lodName=lodName)
+                else:
+                    # else it is single-part w/o LOD
+                    self.loadAnims(anims)
 
         else:
             self.copyActor(other, True) # overwrite everything
@@ -391,10 +380,7 @@ class Actor(DirectObject, NodePath):
         # don't want this behavior for Actors; Actors should only be
         # compared pointerwise.  A NodePath that happens to reference
         # the same node is still different from the Actor.
-        if self is other:
-            return 0
-        else:
-            return 1
+        return 0 if self is other else 1
 
     def __str__(self):
         """
@@ -567,9 +553,7 @@ class Actor(DirectObject, NodePath):
 
         for lodName, partBundleDict in self.__partBundleDict.items():
             if partName is None:
-                for partDef in partBundleDict.values():
-                    bundles.append(partDef.getBundle())
-
+                bundles.extend(partDef.getBundle() for partDef in partBundleDict.values())
             else:
                 subpartDef = self.__subpartDict.get(partName, Actor.SubpartDef(partName))
                 partDef = partBundleDict.get(subpartDef.truePartName)
@@ -586,19 +570,18 @@ class Actor(DirectObject, NodePath):
         self.__sortedLODNames = list(self.__partBundleDict.keys())
         # Reverse sort the doing a string->int
         def sortKey(x):
-            if not str(x).isdigit():
-                smap = {'h':3,
-                        'm':2,
-                        'l':1,
-                        'f':0}
-
-                #sx = smap.get(x[0], None)
-                #
-                #if sx is None:
-                #    self.notify.error('Invalid lodName: %s' % x)
-                return smap[x[0]]
-            else:
+            if str(x).isdigit():
                 return int(x)
+            smap = {'h':3,
+                    'm':2,
+                    'l':1,
+                    'f':0}
+
+            #sx = smap.get(x[0], None)
+            #
+            #if sx is None:
+            #    self.notify.error('Invalid lodName: %s' % x)
+            return smap[x[0]]
 
         self.__sortedLODNames.sort(key=sortKey, reverse=True)
 
@@ -671,7 +654,7 @@ class Actor(DirectObject, NodePath):
                                               self.switches[eachLod][1]))
 
         switchNum = self.__LODNode.node().getNumSwitches()
-        for eachSwitch in range(0, switchNum):
+        for eachSwitch in range(switchNum):
             print("c++ switches for %d: in: %d, out: %d" % (eachSwitch,
                    self.__LODNode.node().getIn(eachSwitch),
                    self.__LODNode.node().getOut(eachSwitch)))
@@ -717,10 +700,7 @@ class Actor(DirectObject, NodePath):
         """
         if self.__LODNode:
             lod = self.__LODNode.find(str(lodName))
-            if lod.isEmpty():
-                return None
-            else:
-                return lod
+            return None if lod.isEmpty() else lod
         else:
             return None
 
@@ -789,11 +769,7 @@ class Actor(DirectObject, NodePath):
         Returns True if any joint has changed as a result of this,
         False otherwise. """
 
-        if lodName is None:
-            lodNames = self.getLODNames()
-        else:
-            lodNames = [lodName]
-
+        lodNames = self.getLODNames() if lodName is None else [lodName]
         anyChanged = False
         if lod < len(lodNames):
             lodName = lodNames[lod]
@@ -805,12 +781,13 @@ class Actor(DirectObject, NodePath):
 
             for partName in partNames:
                 partBundle = self.getPartBundle(partName, lodNames[lod])
-                if force:
-                    if partBundle.forceUpdate():
-                        anyChanged = True
-                else:
-                    if partBundle.update():
-                        anyChanged = True
+                if (
+                    force
+                    and partBundle.forceUpdate()
+                    or not force
+                    and partBundle.update()
+                ):
+                    anyChanged = True
         else:
             self.notify.warning('update() - no lod: %d' % lod)
 
@@ -852,8 +829,7 @@ class Actor(DirectObject, NodePath):
         if self.__animControlDict:
             # use the first lod
             lodName = next(iter(self.__animControlDict))
-            controls = self.getAnimControls(animName, partName)
-            if controls:
+            if controls := self.getAnimControls(animName, partName):
                 return controls[0].getPlayRate()
         return None
 
@@ -900,8 +876,7 @@ class Actor(DirectObject, NodePath):
     def getFrameTime(self, anim, frame, partName=None):
         numFrames = self.getNumFrames(anim,partName)
         animTime = self.getDuration(anim,partName)
-        frameTime = animTime * float(frame) / numFrames
-        return frameTime
+        return animTime * float(frame) / numFrames
 
     def getCurrentAnim(self, partName=None):
         """
@@ -922,13 +897,14 @@ class Actor(DirectObject, NodePath):
                 Actor.notify.warning("couldn't find part: %s" % (partName))
                 return None
 
-        # loop through all anims for named part and find if any are playing
-        for animName, anim in animDict.items():
-            if anim.animControl and anim.animControl.isPlaying():
-                return animName
-
-        # we must have found none, or gotten an error
-        return None
+        return next(
+            (
+                animName
+                for animName, anim in animDict.items()
+                if anim.animControl and anim.animControl.isPlaying()
+            ),
+            None,
+        )
 
     def getCurrentFrame(self, animName=None, partName=None):
         """
@@ -1034,8 +1010,7 @@ class Actor(DirectObject, NodePath):
         if not partBundleDict:
             Actor.notify.warning("no lod named: %s" % (lodName))
             return
-        partDef = partBundleDict.get(partName)
-        if partDef:
+        if partDef := partBundleDict.get(partName):
             partDef.partBundleNP.hide()
         else:
             Actor.notify.warning("no part named %s!" % (partName))
@@ -1049,8 +1024,7 @@ class Actor(DirectObject, NodePath):
         if not partBundleDict:
             Actor.notify.warning("no lod named: %s" % (lodName))
             return
-        partDef = partBundleDict.get(partName)
-        if partDef:
+        if partDef := partBundleDict.get(partName):
             partDef.partBundleNP.show()
         else:
             Actor.notify.warning("no part named %s!" % (partName))
@@ -1064,8 +1038,7 @@ class Actor(DirectObject, NodePath):
         if not partBundleDict:
             Actor.notify.warning("no lod named: %s" % (lodName))
             return
-        partDef = partBundleDict.get(partName)
-        if partDef:
+        if partDef := partBundleDict.get(partName):
             partDef.partBundleNP.show()
             partDef.partBundleNP.getChildren().show()
         else:
@@ -1122,17 +1095,13 @@ class Actor(DirectObject, NodePath):
 
         subpartDef = self.__subpartDict.get(partName, Actor.SubpartDef(partName))
 
-        partDef = partBundleDict.get(subpartDef.truePartName)
-        if partDef:
+        if partDef := partBundleDict.get(subpartDef.truePartName):
             bundle = partDef.getBundle()
         else:
             Actor.notify.warning("no part named %s!" % (partName))
             return None
 
-        # Get a handle to the joint.
-        joint = bundle.findChild(jointName)
-
-        if joint:
+        if joint := bundle.findChild(jointName):
             joint.clearNetTransforms()
             joint.clearLocalTransforms()
         else:
@@ -1164,15 +1133,14 @@ class Actor(DirectObject, NodePath):
         for partBundleDict in partBundleDicts:
             parts = []
             if partName:
-                subpartDef = self.__subpartDict.get(partName, None)
-                if not subpartDef:
-                    # Whole part
-                    subset = None
-                    partDef = partBundleDict.get(partName)
-                else:
+                if subpartDef := self.__subpartDict.get(partName, None):
                     # Sub-part
                     subset = subpartDef.subset
                     partDef = partBundleDict.get(subpartDef.truePartName)
+                else:
+                    # Whole part
+                    subset = None
+                    partDef = partBundleDict.get(partName)
                 if not partDef:
                     Actor.notify.warning("no part named %s!" % (partName))
                     return []
@@ -1185,15 +1153,10 @@ class Actor(DirectObject, NodePath):
                 partBundle = partData.getBundle()
 
                 if not pattern.hasGlobCharacters() and not subset:
-                    # The simple case.
-                    joint = partBundle.findChild(jointName)
-                    if joint:
+                    if joint := partBundle.findChild(jointName):
                         joints.append(joint)
                 else:
-                    # The more complex case.
-                    isIncluded = True
-                    if subset:
-                        isIncluded = subset.isIncludeEmpty()
+                    isIncluded = subset.isIncludeEmpty() if subset else True
                     self.__getPartJoints(joints, pattern, partBundle, subset, isIncluded)
 
         return joints
@@ -1231,8 +1194,7 @@ class Actor(DirectObject, NodePath):
             return None
 
         subpartDef = self.__subpartDict.get(partName, Actor.SubpartDef(partName))
-        partDef = partBundleDict.get(subpartDef.truePartName)
-        if partDef:
+        if partDef := partBundleDict.get(subpartDef.truePartName):
             bundle = partDef.getBundle()
         else:
             Actor.notify.warning("no part named %s!" % (partName))
@@ -1251,8 +1213,7 @@ class Actor(DirectObject, NodePath):
             return None
 
         subpartDef = self.__subpartDict.get(partName, Actor.SubpartDef(partName))
-        partDef = partBundleDict.get(subpartDef.truePartName)
-        if partDef:
+        if partDef := partBundleDict.get(subpartDef.truePartName):
             bundle = partDef.getBundle()
         else:
             Actor.notify.warning("no part named %s!" % (partName))
@@ -1331,12 +1292,10 @@ class Actor(DirectObject, NodePath):
     def instance(self, path, partName, jointName, lodName="lodRoot"):
         """instance(self, NodePath, string, string, key="lodRoot")
         Instance a nodePath to an actor part at a joint called jointName"""
-        partBundleDict = self.__partBundleDict.get(lodName)
-        if partBundleDict:
+        if partBundleDict := self.__partBundleDict.get(lodName):
             subpartDef = self.__subpartDict.get(partName, Actor.SubpartDef(partName))
-            partDef = partBundleDict.get(subpartDef.truePartName)
-            if partDef:
-                joint = partDef.partBundleNP.find("**/" + jointName)
+            if partDef := partBundleDict.get(subpartDef.truePartName):
+                joint = partDef.partBundleNP.find(f'**/{jointName}')
                 if joint.isEmpty():
                     Actor.notify.warning("%s not found!" % (jointName))
                 else:
@@ -1349,14 +1308,11 @@ class Actor(DirectObject, NodePath):
     def attach(self, partName, anotherPartName, jointName, lodName="lodRoot"):
         """attach(self, string, string, string, key="lodRoot")
         Attach one actor part to another at a joint called jointName"""
-        partBundleDict = self.__partBundleDict.get(lodName)
-        if partBundleDict:
+        if partBundleDict := self.__partBundleDict.get(lodName):
             subpartDef = self.__subpartDict.get(partName, Actor.SubpartDef(partName))
-            partDef = partBundleDict.get(subpartDef.truePartName)
-            if partDef:
-                anotherPartDef = partBundleDict.get(anotherPartName)
-                if anotherPartDef:
-                    joint = anotherPartDef.partBundleNP.find("**/" + jointName)
+            if partDef := partBundleDict.get(subpartDef.truePartName):
+                if anotherPartDef := partBundleDict.get(anotherPartName):
+                    joint = anotherPartDef.partBundleNP.find(f'**/{jointName}')
                     if joint.isEmpty():
                         Actor.notify.warning("%s not found!" % (jointName))
                     else:

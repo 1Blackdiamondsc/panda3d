@@ -114,8 +114,6 @@ class dataHolder:
         self.CollisionHandler.setInPattern("%fnenter%in")
         self.CollisionHandler.setOutPattern("%fnexit%in")
 
-        pass
-
 
     def resetAll(self):
         #################################################################
@@ -173,7 +171,6 @@ class dataHolder:
                     self.removeObj(node)
             nodePath.removeNode()
             self.ModelNum -= 1
-            pass
         elif name in self.ActorDic:
             del self.ActorDic[name]
             del self.ActorRefDic[name]
@@ -182,27 +179,23 @@ class dataHolder:
                     self.removeObj(node)
             nodePath.removeNode()
             self.ActorNum -= 1
-            pass
         elif name in self.collisionDict:
             del self.collisionDict[name]
             if len(childrenList) != 0:
                 for node in childrenList:
                     self.removeObj(node)
             nodePath.removeNode()
-            pass
         elif name in self.dummyDict:
             del self.dummyDict[name]
             if len(childrenList) != 0:
                 for node in childrenList:
                     self.removeObj(node)
             nodePath.removeNode()
-            pass
         elif self.lightManager.isLight(name):
             if len(childrenList) != 0:
                 for node in childrenList:
                     self.removeObj(node)
-            list = self.lightManager.delete(name)
-            return list
+            return self.lightManager.delete(name)
         elif name in self.particleNodes:
             self.particleNodes[name].removeNode()
             del self.particleNodes[name]
@@ -249,22 +242,14 @@ class dataHolder:
         oHpr = holder[name].getHpr()+cHpr
 
         for i in range(num):
+            ### copy model node from modelpool
+            newName = name+'_copy_%d'%i
+            while self.isInScene(newName):
+                newName = f'{newName}_1'
             if isModel:
-                ### copy model node from modelpool
-                newName = name+'_copy_%d'%i
-                while self.isInScene(newName):
-                    newName = newName + '_1'
                 holder[newName] = loader.loadModel(FilePath.getFullpath())
                 holderRef[newName] = FilePath
                 self.ModelNum += 1
-                holder[newName].reparentTo(parent)
-                holder[newName].setPos(oPos)
-                holder[newName].setHpr(oHpr)
-                holder[newName].setScale(cScale)
-                holder[newName].setName(newName)
-                oPos = oPos + cPos
-                oHpr = oHpr + cHpr
-
             else:
                 ### copy the actor- not includ its animations
                 '''
@@ -272,19 +257,16 @@ class dataHolder:
                 I tried, but it caused some error.
                 I 'might' be back to fix this problem.
                 '''
-                newName = name+'_copy_%d'%i
-                while self.isInScene(newName):
-                    newName = newName + '_1'
                 holder[newName] = Actor.Actor(FilePath.getFullpath())
                 holderRef[newName] = FilePath
                 self.ActorNum += 1
-                holder[newName].reparentTo(parent)
-                holder[newName].setPos(oPos)
-                holder[newName].setHpr(oHpr)
-                holder[newName].setScale(cScale)
-                holder[newName].setName(newName)
-                oPos = oPos + cPos
-                oHpr = oHpr + cHpr
+            holder[newName].reparentTo(parent)
+            holder[newName].setPos(oPos)
+            holder[newName].setHpr(oHpr)
+            holder[newName].setScale(cScale)
+            holder[newName].setName(newName)
+            oPos = oPos + cPos
+            oHpr = oHpr + cHpr
 
         messenger.send('SGE_Update Explorer',[render])
         return
@@ -304,9 +286,9 @@ class dataHolder:
         self.ModelNum += 1
         defaultName = Name + '%d'%self.ModelNum
         while self.isInScene(defaultName):
-            defaultName = defaultName + '_1'
+            defaultName = f'{defaultName}_1'
         self.ModelDic[defaultName] = loader.loadModel(FilePath)
-        if self.ModelDic[defaultName]==None:
+        if self.ModelDic[defaultName] is None:
             del self.ModelDic[defaultName]
             self.ModelNum -= 1
             return False
@@ -332,9 +314,9 @@ class dataHolder:
         self.ActorNum += 1
         defaultName = Name + '%d'%self.ActorNum
         while self.isInScene(defaultName):
-            defaultName = defaultName + '_1'
+            defaultName = f'{defaultName}_1'
         self.ActorDic[defaultName] = Actor.Actor(FilePath.getFullpath())
-        if self.ActorDic[defaultName]==None:
+        if self.ActorDic[defaultName] is None:
             del self.ActorDic[defaultName]
             self.ActorNum -= 1
             return False
@@ -355,26 +337,16 @@ class dataHolder:
         return name in self.ActorDic
 
     def getActor(self, name):
-        ###########################################################################
-        # getActor(self, name)
-        # This funciton will return an Actor node named "name"
-        ###########################################################################
         if self.isActor(name):
             return self.ActorDic[name]
-        else:
-            print('----No Actor named: ', name)
-            return None
+        print('----No Actor named: ', name)
+        return None
 
     def getModel(self, name):
-        ###########################################################################
-        # getModel(self, name)
-        # This funciton will return a model node named "name"
-        ###########################################################################
         if self.isModel(name):
             return self.ModelDic[name]
-        else:
-            print('----No Model named: ', name)
-            return None
+        print('----No Model named: ', name)
+        return None
 
     def isModel(self, name):
         ###########################################################################
@@ -399,7 +371,7 @@ class dataHolder:
             self.ActorDic[name].loadAnims(Dic)
             for anim in Dic:
                 self.ActorDic[name].bindAnim(anim)
-            messenger.send('DataH_loadFinish'+name)
+            messenger.send(f'DataH_loadFinish{name}')
             return
         else:
             print('------ Error when loading animation for Actor: ', name)
@@ -417,7 +389,7 @@ class dataHolder:
             self.ActorDic[name].unloadAnims([anim])
             AnimDict = self.ActorDic[name].getAnimControlDict()
             del AnimDict['lodRoot']['modelRoot'][anim]
-            messenger.send('DataH_removeAnimFinish'+name)
+            messenger.send(f'DataH_removeAnimFinish{name}')
             messenger.send('animRemovedFromNode',[self.ActorDic[name],self.getAnimationDictFromActor(name)])
         return
 
@@ -517,7 +489,7 @@ class dataHolder:
             return
 
         while self.isInScene(nName):
-            nName = nName + '_1'
+            nName = f'{nName}_1'
 
         if self.isActor(oName):
             self.ActorDic[nName]= self.ActorDic[oName]
@@ -580,7 +552,7 @@ class dataHolder:
             return True
         elif name in self.particleNodes:
             return True
-        elif (name == 'render')or(name == 'SEditor')or(name == 'Lights')or(name == 'camera'):
+        elif name in ['render', 'SEditor', 'Lights', 'camera']:
             return True
 
         return False
@@ -594,10 +566,8 @@ class dataHolder:
         name = node.getName()
         if name in self.curveDict:
             self.curveDict[name].append(curveCollection)
-            return
         else:
             self.curveDict[name] = [curveCollection]
-            return
         return
 
     def getCurveList(self, nodePath):
@@ -608,10 +578,7 @@ class dataHolder:
         # If the input node has not been bindedwith any curve, it will return None.
         ###########################################################################
         name = nodePath.getName()
-        if name in self.curveDict:
-            return self.curveDict[name]
-        else:
-            return None
+        return self.curveDict[name] if name in self.curveDict else None
 
     def removeCurveFromNode(self, nodePath, curveName):
         ###########################################################################
@@ -623,11 +590,15 @@ class dataHolder:
         ###########################################################################
         name =nodePath.getName()
         if name in self.curveDict:
-            index = None
-            for curve in self.curveDict[name]:
-                if curve.getCurve(0).getName() == curveName:
-                    index = self.curveDict[name].index(curve)
-                    break
+            index = next(
+                (
+                    self.curveDict[name].index(curve)
+                    for curve in self.curveDict[name]
+                    if curve.getCurve(0).getName() == curveName
+                ),
+                None,
+            )
+
             del self.curveDict[name][index]
             if len(self.curveDict[name])!=0:
                 messenger.send('curveRemovedFromNode',[nodePath, self.curveDict[name]])
@@ -693,26 +664,18 @@ class dataHolder:
         animNameList = self.ActorDic[actorName].getAnimNames()
         if len(animNameList)==0:
             return {}
-        animDict = {}
-        for anim in animNameList:
-            animDict[anim] = animContorlDict['lodRoot']['modelRoot'][anim][0]
-        return animDict
+        return {
+            anim: animContorlDict['lodRoot']['modelRoot'][anim][0]
+            for anim in animNameList
+        }
 
     def addDummyNode(self,nodePath):
-        ###########################################################################
-        # addDummyNode(self,nodePath)
-        # This function will add a dummy node into the scane and reparent it to nodePath which user put in.
-        #
-        # This dummy actually is just a default sphere model.
-        #
-        ###########################################################################
-        number = len(self.dummyDict)
-        number += 1
+        number = len(self.dummyDict) + 1
         name = 'Dummy%d'%number
         self.dummyModel = loader.loadModel( "models/misc/sphere" )
         self.dummyModel.reparentTo(nodePath)
         while self.isInScene(name):
-            name = name + '_1'
+            name = f'{name}_1'
         self.dummyModel.setName(name)
         self.dummyDict[name] = self.dummyModel
         messenger.send('SGE_Update Explorer',[render])
@@ -725,10 +688,10 @@ class dataHolder:
         # The collision object will be reparent to "nodePath" and
         # will be show on the screen if user has enable the "show collision objects" option.
         ###########################################################################
-        if name == None:
+        if name is None:
             name = 'CollisionNode_%d'%len(self.collisionDict)
         while self.isInScene(name):
-            name=name + '_1'
+            name = f'{name}_1'
         node = CollisionNode(name)
         node.addSolid(collisionObj)
         self.collisionDict[name] = nodePath.attachNewNode(node)
@@ -770,13 +733,12 @@ class dataHolder:
                     self.collisionDict[name].hide()
 
     def toggleParticleVisable(self, visable):
-        if not visable:
-            for name in self.particleNodes:
+        for name in self.particleNodes:
+            if not visable:
                 self.particleNodes[name].setTransparency(True)
                 self.particleNodes[name].setAlphaScale(0)
                 self.particleNodes[name].setBin("fixed", 1)
-        else:
-            for name in self.particleNodes:
+            else:
                 self.particleNodes[name].setTransparency(False)
                 self.particleNodes[name].setAlphaScale(1)
                 self.particleNodes[name].setBin("default", 1)
@@ -790,10 +752,7 @@ class dataHolder:
         # The formate of thsi dictionary is
         # {"name of Blend Animation" : ["Animation A, Animation B, Effect(Float, 0~1)"]}
         ###########################################################################
-        if name in self.blendAnimDict:
-            return self.blendAnimDict[name]
-        else:
-            return {}
+        return self.blendAnimDict[name] if name in self.blendAnimDict else {}
 
     def saveBlendAnim(self, actorName, blendName, animNameA, animNameB, effect):
         ###########################################################################
@@ -832,25 +791,16 @@ class dataHolder:
         return self.saveBlendAnim(actorName, nName, animNameA, animNameB, effect)
 
     def removeBlendAnim(self, actorName, blendName):
-        ###########################################################################
-        # removeBlendAnim(self, actorName, blendName)
-        # This fucntion will remove the record of blended animation named "blendName"
-        # from the actor named "actorName".
-        #
-        # Also, it will check that there is any blended animation remained for this actor,
-        # If none, this function will clear the "Blending" tag of this object.
-        ###########################################################################
-        if actorName in self.blendAnimDict:
-            if blendName in self.blendAnimDict[actorName]:
-                ### replace the original setting
-                del self.blendAnimDict[actorName][blendName]
-            if len(self.blendAnimDict[actorName])==0:
-                del self.blendAnimDict[actorName]
-                self.getActor(actorName).clearTag('Blending')
-                return {}
-            return self.blendAnimDict[actorName]
-        else:
+        if actorName not in self.blendAnimDict:
             return {}
+        if blendName in self.blendAnimDict[actorName]:
+            ### replace the original setting
+            del self.blendAnimDict[actorName][blendName]
+        if len(self.blendAnimDict[actorName])==0:
+            del self.blendAnimDict[actorName]
+            self.getActor(actorName).clearTag('Blending')
+            return {}
+        return self.blendAnimDict[actorName]
 
     def getAllObjNameAsList(self):
         ###########################################################################
@@ -937,7 +887,7 @@ class dataHolder:
         f=Filename.fromOsSpecific(OpenFilename)
         fileName=f.getBasenameWoExtension()
         dirName=f.getFullpathWoExtension()
-        print("DATAHOLDER::" + dirName)
+        print(f'DATAHOLDER::{dirName}')
         ############################################################################
         # Append the path to this file to our sys path where python looks for modules
         # We do this so that we can use "import"  on our saved scene code and execute it
@@ -962,7 +912,10 @@ class dataHolder:
         for model in self.Scene.ModelDic:
             self.ModelDic[model]=self.Scene.ModelDic[model]
             #self.ModelRefDic[model]=self.Scene.ModelRefDic[model] # The Old absolute paths way
-            self.ModelRefDic[model]=Filename(dirName + "/" + self.Scene.ModelRefDic[model]) # Relative Paths
+            self.ModelRefDic[model] = Filename(
+                f'{dirName}/{self.Scene.ModelRefDic[model]}'
+            )
+
             self.ModelNum=self.ModelNum+1
 
         ############################################################################
@@ -971,7 +924,10 @@ class dataHolder:
         for actor in self.Scene.ActorDic:
             self.ActorDic[actor]=self.Scene.ActorDic[actor]
             #self.ActorRefDic[actor]=self.Scene.ActorRefDic[actor] # Old way of doing absolute paths
-            self.ActorRefDic[actor]=Filename(dirName + "/" + self.Scene.ActorRefDic[actor]) # Relative Paths
+            self.ActorRefDic[actor] = Filename(
+                f'{dirName}/{self.Scene.ActorRefDic[actor]}'
+            )
+
             if(str(actor) in self.Scene.blendAnimDict):
                 self.blendAnimDict[actor]=self.Scene.blendAnimDict[actor]
             self.ActorNum=self.ActorNum+1
@@ -1050,7 +1006,7 @@ class dataHolder:
 
         # Clean up things added to scene graph by saved file's code execution
         for light in self.Scene.LightDict:
-            vestige=render.find('**/'+light)
+            vestige = render.find(f'**/{light}')
             if(vestige != None):
                 vestige.removeNode()
 
@@ -1058,10 +1014,7 @@ class dataHolder:
         # return the filename and update the scenegraph explorer window
         ############################################################################
         messenger.send('SGE_Update Explorer',[render])
-        if(OpenFilename):
-            return OpenFilename
-        else:
-            return None
+        return OpenFilename or None
 
     def getList(self):
         return self.lightManager.getList()

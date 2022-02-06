@@ -48,9 +48,7 @@ class Placer(AppShell):
         self.refCS = self.tempCS
 
         # Dictionary keeping track of all node paths manipulated so far
-        self.nodePathDict = {}
-        self.nodePathDict['camera'] = SEditor.camera
-        self.nodePathDict['widget'] = SEditor.widget
+        self.nodePathDict = {'camera': SEditor.camera, 'widget': SEditor.widget}
         self.nodePathNames = ['camera', 'widget', 'selected']
 
         self.refNodePathDict = {}

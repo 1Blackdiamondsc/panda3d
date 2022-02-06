@@ -54,10 +54,7 @@ class DirectManipulationControl(DirectObject):
     def manipulationStart(self, modifiers):
         # Start out in select mode
         self.mode = 'select'
-        # Check for a widget hit point
-        entry = SEditor.iRay.pickWidget()
-        # Did we hit a widget?
-        if entry:
+        if entry := SEditor.iRay.pickWidget():
             # Yes!
             self.hitPt.assign(entry.getSurfacePoint(entry.getFromNodePath()))
             self.hitPtDist = Vec3(self.hitPt).length()
@@ -85,14 +82,14 @@ class DirectManipulationControl(DirectObject):
         return Task.done
 
     def watchMouseTask(self, state):
-        if (((abs (state.initX - SEditor.dr.mouseX)) > 0.01) or
-            ((abs (state.initY - SEditor.dr.mouseY)) > 0.01)):
-            taskMgr.remove('manip-move-wait')
-            self.mode = 'move'
-            self.manipulateObject()
-            return Task.done
-        else:
+        if (abs(state.initX - SEditor.dr.mouseX)) <= 0.01 and (
+            abs(state.initY - SEditor.dr.mouseY)
+        ) <= 0.01:
             return Task.cont
+        taskMgr.remove('manip-move-wait')
+        self.mode = 'move'
+        self.manipulateObject()
+        return Task.done
 
     def manipulationStop(self,xy=[]):
         taskMgr.remove('manipulateObject')
@@ -105,8 +102,7 @@ class DirectManipulationControl(DirectObject):
             skipFlags = SKIP_HIDDEN | SKIP_BACKFACE
             # Skip camera (and its children), unless control key is pressed
             skipFlags |= SKIP_CAMERA * (1 - base.getControl())
-            entry = SEditor.iRay.pickGeom(skipFlags = skipFlags)
-            if entry:
+            if entry := SEditor.iRay.pickGeom(skipFlags=skipFlags):
                 # Record hit point information
                 self.hitPt.assign(entry.getSurfacePoint(entry.getFromNodePath()))
                 self.hitPtDist = Vec3(self.hitPt).length()
@@ -212,10 +208,7 @@ class DirectManipulationControl(DirectObject):
         t = Task.Task(self.manipulateObjectTask)
         t.fMouseX = abs(SEditor.dr.mouseX) > 0.9
         t.fMouseY = abs(SEditor.dr.mouseY) > 0.9
-        if t.fMouseX:
-            t.constrainedDir = 'y'
-        else:
-            t.constrainedDir = 'x'
+        t.constrainedDir = 'y' if t.fMouseX else 'x'
         # Compute widget's xy coords in screen space
         t.coaCenter = getScreenXY(SEditor.widget)
         # These are used to rotate about view vector
@@ -233,30 +226,21 @@ class DirectManipulationControl(DirectObject):
                 self.xlate2D(state)
             elif type == 'ring':
                 self.rotate1D(state)
-        # No widget interaction, determine free manip mode
         elif self.fFreeManip:
-            # If we've been scaling and changed modes, reset object handles
-            if 0 and self.fScaling and (not SEditor.fAlt):
-                self.objectHandles.transferObjectHandlesScale()
-                self.fScaling = 0
             # Alt key switches to a scaling mode
             if SEditor.fControl:
                 self.fScaling = 1
                 self.scale3D(state)
-            # Otherwise, manip mode depends on where you started
             elif state.fMouseX and state.fMouseY:
                 # In the corner, spin around camera's axis
                 self.rotateAboutViewVector(state)
             elif state.fMouseX or state.fMouseY:
                 # Mouse started elsewhere in the outer frame, rotate
                 self.rotate2D(state)
+            elif SEditor.fShift:
+                self.xlateCamXY(state)
             else:
-                # Mouse started in central region, xlate
-                # Mode depends on shift key
-                if SEditor.fShift or SEditor.fControl:
-                    self.xlateCamXY(state)
-                else:
-                    self.xlateCamXZ(state)
+                self.xlateCamXZ(state)
         if self.fSetCoa:
             # Update coa based on current widget position
             SEditor.selected.last.mCoa2Dnp.assign(

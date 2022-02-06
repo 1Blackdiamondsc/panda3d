@@ -57,11 +57,7 @@ class sideWindow(AppShell):
             )
         self.defineoptions(kw, optiondefs)
 
-        if parent == None:
-            self.parent = Toplevel()
-        else:
-            self.parent = parent
-
+        self.parent = Toplevel() if parent is None else parent
         AppShell.__init__(self, self.parent)
         self.parent.geometry('%dx%d+%d+%d' % (self.frameWidth, self.frameHeight,self.frameIniPosX,self.frameIniPosY))
 
@@ -241,7 +237,6 @@ class sideWindow(AppShell):
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass
 
     ###############################
     def updateInfo(self, page = 'Tree Graph'):
@@ -263,7 +258,6 @@ class sideWindow(AppShell):
         # updata the tree.
         #################################################################
         self.SGE.update()
-        pass
 
     def updateWorldSetting(self):
         #################################################################
@@ -277,7 +271,6 @@ class sideWindow(AppShell):
         self.ParticleVar.set(self.ParticleEnable)
         self.baseUseDriveVar.set(self.basedriveEnable)
         self.backgroundColor.set(value = self.worldColor)
-        pass
 
     def toggleLights(self):
         #################################################################
@@ -288,7 +281,6 @@ class sideWindow(AppShell):
         #################################################################
         self.lightEnable = (self.lightEnable+1)%2
         messenger.send('SW_lightToggle')
-        pass
 
     def showCollision(self):
         #################################################################
@@ -298,7 +290,6 @@ class sideWindow(AppShell):
         #################################################################
         self.collision = (self.collision+1)%2
         messenger.send('SW_collisionToggle', [self.collision])
-        pass
 
     def enableParticle(self):
         #################################################################
@@ -308,7 +299,6 @@ class sideWindow(AppShell):
         #################################################################
         self.ParticleEnable = (self.ParticleEnable+1)%2
         messenger.send('SW_particleToggle', [self.ParticleEnable])
-        pass
 
     def enablebaseUseDrive(self):
         #################################################################
@@ -332,7 +322,6 @@ class sideWindow(AppShell):
             base.disableMouse()
             self.enableBaseUseDrive = 0
         self.basedriveEnable = (self.basedriveEnable+1)%2
-        pass
 
     def toggleBackface(self):
         #################################################################

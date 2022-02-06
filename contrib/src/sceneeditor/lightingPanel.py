@@ -245,7 +245,6 @@ class lightingPanel(AppShell):
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass
 
     def renameLight(self):
         #################################################################
@@ -421,7 +420,7 @@ class lightingPanel(AppShell):
         # Call Back function. This will be called
         # when user try to change the color of light.
         #################################################################
-        if self.currentLight==None:
+        if self.currentLight is None:
             return
         self.currentLight.setColor(VBase4((color[0]/255),(color[1]/255),(color[2]/255),1))
         return
@@ -432,7 +431,7 @@ class lightingPanel(AppShell):
         # Call Back function. This will be called
         # when user try to change the Specular color of light.
         #################################################################
-        if self.currentLight==None:
+        if self.currentLight is None:
             return
         self.currentLight.setSpecColor(VBase4((color[0]/255),(color[1]/255),(color[2]/255),1))
         return
@@ -443,7 +442,7 @@ class lightingPanel(AppShell):
         # Call Back function. This will be called
         # when user try to change the position of light.
         #################################################################
-        if self.currentLight==None:
+        if self.currentLight is None:
             return
         self.currentLight.setPosition(Point3(position[0],position[1],position[2]))
         return
@@ -454,7 +453,7 @@ class lightingPanel(AppShell):
         # Call Back function. This will be called
         # when user try to change the orientation of light.
         #################################################################
-        if self.currentLight==None:
+        if self.currentLight is None:
             return
         self.currentLight.setOrientation(Vec3(orient[0],orient[1],orient[2]))
         return

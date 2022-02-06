@@ -15,7 +15,7 @@ class Particles(ParticleSystem):
     def __init__(self, name=None, poolSize=1024):
         """__init__(name, poolSize)"""
 
-        if (name == None):
+        if name is None:
             self.name = 'particles-%d' % Particles.id
             Particles.id += 1
         else:
@@ -175,7 +175,7 @@ class Particles(ParticleSystem):
 
     def removeForce(self, force):
         """removeForce(force)"""
-        if (force == None):
+        if force is None:
             self.notify.warning('removeForce() - force == None!')
             return
         if (force.isLinear()):

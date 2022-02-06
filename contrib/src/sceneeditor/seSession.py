@@ -328,8 +328,6 @@ class SeSession(DirectObject):  ### Customized DirectSession
         elif input == 'b':
             messenger.send('SEditor-ToggleBackface')
             base.toggleBackface()
-        #elif input == 'control-f':
-        #    self.flash(last)
         elif input == 'shift-l':
             self.cameraControl.toggleCOALock()
         elif input == 'o':
@@ -356,9 +354,9 @@ class SeSession(DirectObject):  ### Customized DirectSession
         elif input == 'w':
             messenger.send('SEditor-ToggleWireframe')
             base.toggleWireframe()
-        elif (input == '[') or (input == '{'):
+        elif input in ['[', '{']:
             self.undo()
-        elif (input == ']') or (input == '}'):
+        elif input in [']', '}']:
             self.redo()
 
 
@@ -383,8 +381,7 @@ class SeSession(DirectObject):  ### Customized DirectSession
         return modifiers & DIRECT_ALT_MOD
 
     def select(self, nodePath, fMultiSelect = 0, fResetAncestry = 1, callback=False):
-        dnp = self.selected.select(nodePath, fMultiSelect)
-        if dnp:
+        if dnp := self.selected.select(nodePath, fMultiSelect):
             messenger.send('DIRECT_preSelectNodePath', [dnp])
             if fResetAncestry:
                 # Update ancestry
@@ -433,8 +430,7 @@ class SeSession(DirectObject):  ### Customized DirectSession
         return Task.cont
 
     def deselect(self, nodePath):
-        dnp = self.selected.deselect(nodePath)
-        if dnp:
+        if dnp := self.selected.deselect(nodePath):
             # Hide the manipulation widget
             self.widget.hideWidget()
             self.selectedNPReadout.reparentTo(hidden)
@@ -541,36 +537,39 @@ class SeSession(DirectObject):  ### Customized DirectSession
         nodePath.hideCS()
 
     def upAncestry(self):
-        if self.ancestry:
-            l = len(self.ancestry)
-            i = self.ancestryIndex + 1
-            if i < l:
-                np = self.ancestry[i]
-                name = np.getName()
-                if i>0:
-                    type = self.ancestry[i-1].node().getType().getName()
-                else:
-                    type = self.ancestry[0].node().getType().getName()
+        if not self.ancestry:
+            return
+        l = len(self.ancestry)
+        i = self.ancestryIndex + 1
+        if i < l:
+            np = self.ancestry[i]
+            name = np.getName()
+            if i>0:
+                type = self.ancestry[i-1].node().getType().getName()
+            else:
+                type = self.ancestry[0].node().getType().getName()
 
-                ntype = np.node().getType().getName()
-                if (name != 'render') and (name != 'renderTop')and(self.checkTypeNameForAncestry(type, ntype)):
-                    self.ancestryIndex = i
-                    self.select(np, 0, 0, True)
+            ntype = np.node().getType().getName()
+            if (name != 'render') and (name != 'renderTop')and(self.checkTypeNameForAncestry(type, ntype)):
+                self.ancestryIndex = i
+                self.select(np, 0, 0, True)
 
     def checkTypeNameForAncestry(self, type, nextType ):
         if (type=='ModelRoot'):
-            if (nextType=='AmbientLight')or(nextType=='PointLight')or(nextType=='DirectionalLight')or(nextType=='Spotlight'):
-                return True
-            return False
-        elif (type=='ModelNode'):
-            if (nextType=='ModelNode'):
-                return True
-            return False
+            return nextType in [
+                'AmbientLight',
+                'PointLight',
+                'DirectionalLight',
+                'Spotlight',
+            ]
+
+        elif type=='ModelNode':
+            return (nextType=='ModelNode')
         elif (type=='CollisionNode'):
             return False
         elif (type=='ActorNode'):
             return False
-        elif (type=='AmbientLight')or(type=='PointLight')or(type=='DirectionalLight')or(type=='Spotlight'):
+        elif type in ['AmbientLight', 'PointLight', 'DirectionalLight', 'Spotlight']:
             return False
         else:
             return True
@@ -582,7 +581,7 @@ class SeSession(DirectObject):  ### Customized DirectSession
             if i >= 0:
                 np = self.ancestry[i]
                 name = np.getName()
-                if (name != 'render') and (name != 'renderTop'):
+                if name not in ['render', 'renderTop']:
                     self.ancestryIndex = i
                     self.select(np, 0, 0, True)
 
@@ -590,9 +589,9 @@ class SeSession(DirectObject):  ### Customized DirectSession
     def getAndSetName(self, nodePath):
         """ Prompt user for new node path name """
         from tkSimpleDialog import askstring
-        newName = askstring('Node Path: ' + nodePath.getName(),
-                            'Enter new name:')
-        if newName:
+        if newName := askstring(
+            'Node Path: ' + nodePath.getName(), 'Enter new name:'
+        ):
             nodePath.setName(newName)
             messenger.send('DIRECT_nodePathSetName', [nodePath, newName])
 
@@ -801,16 +800,10 @@ class DisplayRegionContext(DirectObject):
 
     # The following take into consideration sideways displays
     def getHfov(self):
-        if self.isSideways:
-            return self.camLens.getVfov()
-        else:
-            return self.camLens.getHfov()
+        return self.camLens.getVfov() if self.isSideways else self.camLens.getHfov()
 
     def getVfov(self):
-        if self.isSideways:
-            return self.camLens.getHfov()
-        else:
-            return self.camLens.getVfov()
+        return self.camLens.getHfov() if self.isSideways else self.camLens.getVfov()
 
     def setHfov(self,hfov):
         if self.isSideways:
@@ -832,17 +825,11 @@ class DisplayRegionContext(DirectObject):
 
     def getWidth(self):
         prop = base.win.getProperties()
-        if prop.hasSize():
-            return prop.getXSize()
-        else:
-            return 640
+        return prop.getXSize() if prop.hasSize() else 640
 
     def getHeight(self):
         prop = base.win.getProperties()
-        if prop.hasSize():
-            return prop.getYSize()
-        else:
-            return 480
+        return prop.getYSize() if prop.hasSize() else 480
 
     def camUpdate(self, lens = None):
         # Window Data

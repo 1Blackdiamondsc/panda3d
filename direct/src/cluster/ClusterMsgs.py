@@ -258,8 +258,7 @@ class ClusterMsgHandler:
         return datagram
 
     def parseCommandStringDatagram(self, dgi):
-        command = dgi.getString()
-        return command
+        return dgi.getString()
 
     def makeSwapNowDatagram(self):
         datagram = PyDatagram()

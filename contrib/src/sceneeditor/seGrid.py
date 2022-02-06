@@ -101,17 +101,16 @@ class DirectGrid(NodePath,DirectObject):
                 center.drawTo(i * self.gridSpacing, scaledSize, 0)
                 center.moveTo(-scaledSize, i * self.gridSpacing, 0)
                 center.drawTo(scaledSize, i * self.gridSpacing, 0)
+            elif (i % 5) == 0:
+                major.moveTo(i * self.gridSpacing, -scaledSize, 0)
+                major.drawTo(i * self.gridSpacing, scaledSize, 0)
+                major.moveTo(-scaledSize, i * self.gridSpacing, 0)
+                major.drawTo(scaledSize, i * self.gridSpacing, 0)
             else:
-                if (i % 5) == 0:
-                    major.moveTo(i * self.gridSpacing, -scaledSize, 0)
-                    major.drawTo(i * self.gridSpacing, scaledSize, 0)
-                    major.moveTo(-scaledSize, i * self.gridSpacing, 0)
-                    major.drawTo(scaledSize, i * self.gridSpacing, 0)
-                else:
-                    minor.moveTo(i * self.gridSpacing, -scaledSize, 0)
-                    minor.drawTo(i * self.gridSpacing, scaledSize, 0)
-                    minor.moveTo(-scaledSize, i * self.gridSpacing, 0)
-                    minor.drawTo(scaledSize, i * self.gridSpacing, 0)
+                minor.moveTo(i * self.gridSpacing, -scaledSize, 0)
+                minor.drawTo(i * self.gridSpacing, scaledSize, 0)
+                minor.moveTo(-scaledSize, i * self.gridSpacing, 0)
+                minor.drawTo(scaledSize, i * self.gridSpacing, 0)
 
         center.create()
         minor.create()

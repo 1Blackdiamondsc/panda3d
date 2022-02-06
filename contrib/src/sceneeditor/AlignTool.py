@@ -32,7 +32,7 @@ class AlignTool(AppShell):
             ('title',       self.appname,       None),
             )
         self.defineoptions(kw, optiondefs)
-        if parent == None:
+        if parent is None:
             self.parent = Toplevel()
         AppShell.__init__(self, self.parent)
         self.parent.geometry('%dx%d+%d+%d' % (self.frameWidth, self.frameHeight,self.frameIniPosX,self.frameIniPosY))
@@ -162,7 +162,6 @@ class AlignTool(AppShell):
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass
 
     ###############################
 

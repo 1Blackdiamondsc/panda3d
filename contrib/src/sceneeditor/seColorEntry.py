@@ -42,10 +42,9 @@ class seColorEntry(VectorEntry):
         self.initialiseoptions(seColorEntry)
 
     def popupColorPicker(self):
-        # Can pass in current color with: color = (255, 0, 0)
-        color = askcolor(
-            parent = self.interior(),
+        if color := askcolor(
+            parent=self.interior(),
             # Initialize it to current color
-            initialcolor = tuple(self.get()[:3]))[0]
-        if color:
+            initialcolor=tuple(self.get()[:3]),
+        )[0]:
             self.set((color[0], color[1], color[2]))

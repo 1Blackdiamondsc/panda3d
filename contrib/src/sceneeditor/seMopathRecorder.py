@@ -126,7 +126,7 @@ class MopathRecorder(AppShell, DirectObject):
         self.postPoints = []
         self.pointSetDict = {}
         self.pointSetCount = 0
-        self.pointSetName = self.name + '-ps-' + repr(self.pointSetCount)
+        self.pointSetName = f'{self.name}-ps-' + repr(self.pointSetCount)
         # User callback to call before recording point
         self.samplingMode = 'Continuous'
         self.preRecordFunc = None

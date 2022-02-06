@@ -93,14 +93,13 @@ class DirectCameraControl(DirectObject):
             # Start manipulation
             self.spawnXZTranslateOrHPanYZoom()
             # END MOUSE IN CENTRAL REGION
-        else:
-            if ((abs(SEditor.dr.mouseX) > 0.9) and
+        elif ((abs(SEditor.dr.mouseX) > 0.9) and
                 (abs(SEditor.dr.mouseY) > 0.9)):
-                # Mouse is in corners, spawn roll task
-                self.spawnMouseRollTask()
-            else:
-                # Mouse is in outer frame, spawn mouseRotateTask
-                self.spawnMouseRotateTask()
+            # Mouse is in corners, spawn roll task
+            self.spawnMouseRollTask()
+        else:
+            # Mouse is in outer frame, spawn mouseRotateTask
+            self.spawnMouseRotateTask()
 
     def mouseFlyStop(self):
         taskMgr.remove('manipulateCamera')
@@ -121,9 +120,11 @@ class DirectCameraControl(DirectObject):
             # Record reference point
             self.coaMarkerRef.iPosHprScale(base.cam)
             # Record entries
-            self.cqEntries = []
-            for i in range(SEditor.iRay.getNumEntries()):
-                self.cqEntries.append(SEditor.iRay.getEntry(i))
+            self.cqEntries = [
+                SEditor.iRay.getEntry(i)
+                for i in range(SEditor.iRay.getNumEntries())
+            ]
+
         # Show the marker
         self.coaMarker.show()
         # Resize it
@@ -230,10 +231,7 @@ class DirectCameraControl(DirectObject):
         self.camManipRef.setPos(self.coaMarkerPos)
         self.camManipRef.setHpr(SEditor.camera, ZERO_POINT)
         t = Task.Task(self.mouseRotateTask)
-        if abs(SEditor.dr.mouseX) > 0.9:
-            t.constrainedDir = 'y'
-        else:
-            t.constrainedDir = 'x'
+        t.constrainedDir = 'y' if abs(SEditor.dr.mouseX) > 0.9 else 'x'
         taskMgr.add(t, 'manipulateCamera')
 
     def mouseRotateTask(self, state):
@@ -367,7 +365,7 @@ class DirectCameraControl(DirectObject):
         if not coaDist:
             coaDist = Vec3(self.coa - ZERO_POINT).length()
         # Place the marker in render space
-        if ref == None:
+        if ref is None:
             # KEH: use the current display region
             # ref = base.cam
             ref = SEditor.drList.getCurrentDr().cam

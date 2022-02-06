@@ -154,7 +154,6 @@ class collisionWindow(AppShell):
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass
 
     def setObjectType(self, typeName = 'collisionSphere'):
         #################################################################
@@ -254,11 +253,18 @@ class collisionWindow(AppShell):
         posInterior = Frame(contentFrame)
         label = Label(posInterior, text=id+':')
         label.pack(side=LEFT,expand=0,fill=X, padx=1)
-        self.posX = self.createcomponent('posX'+catagory+id, (), None,
-                                         Floater.Floater, (posInterior,),
-                                         text = 'X', relief = FLAT,
-                                         value = 0.0,
-                                         entry_width = 6)
+        self.posX = self.createcomponent(
+            f'posX{catagory}{id}',
+            (),
+            None,
+            Floater.Floater,
+            (posInterior,),
+            text='X',
+            relief=FLAT,
+            value=0.0,
+            entry_width=6,
+        )
+
 
         self.posX.pack(side=LEFT,expand=0,fill=X, padx=1)
 
@@ -269,11 +275,18 @@ class collisionWindow(AppShell):
                                          entry_width = 6)
         self.posY.pack(side=LEFT, expand=0,fill=X, padx=1)
 
-        self.posZ = self.createcomponent('posZ'+catagory+id, (), None,
-                                         Floater.Floater, (posInterior,),
-                                         text = 'Z', relief = FLAT,
-                                         value = 0.0,
-                                         entry_width = 6)
+        self.posZ = self.createcomponent(
+            f'posZ{catagory}{id}',
+            (),
+            None,
+            Floater.Floater,
+            (posInterior,),
+            text='Z',
+            relief=FLAT,
+            value=0.0,
+            entry_width=6,
+        )
+
         self.posZ.pack(side=LEFT, expand=0,fill=X, padx=1)
         self.widgetDict[catagory+id]=[self.posX, self.posY, self.posZ]
         posInterior.pack(side=TOP, expand=0,fill=X, padx=3, pady=3)
@@ -285,10 +298,18 @@ class collisionWindow(AppShell):
                          validate = None,
                          defaultButton = False, buttonText = 'Default',defaultFunction = None ):
         frame = Frame(parent)
-        widget = Pmw.EntryField(frame, labelpos='w', label_text = id+':',
-                                value = value, entry_font=('MSSansSerif', 10),label_font=('MSSansSerif', 10),
-                                modifiedcommand=command, validate = validate,
-                                label_width = labelWidth)
+        widget = Pmw.EntryField(
+            frame,
+            labelpos='w',
+            label_text=f'{id}:',
+            value=value,
+            entry_font=('MSSansSerif', 10),
+            label_font=('MSSansSerif', 10),
+            modifiedcommand=command,
+            validate=validate,
+            label_width=labelWidth,
+        )
+
         widget.configure(entry_state = initialState)
         widget.pack(side=LEFT)
         self.widgetDict[catagory+id] = widget

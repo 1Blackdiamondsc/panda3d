@@ -745,7 +745,7 @@ class ParticlePanel(AppShell):
         widget.pack(fill = X, side = side)
         self.bind(widget, balloonHelp)
         self.widgetDict[category + '-' + text] = widget
-        self.variableDict[category + '-' + text] = bool
+        self.variableDict[f'{category}-{text}'] = bool
         return widget
 
     def createRadiobutton(self, parent, side, category, text,
@@ -757,17 +757,16 @@ class ParticlePanel(AppShell):
         widget['command'] = command
         widget.pack(side = side, fill = X)
         self.bind(widget, balloonHelp)
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def createFloaters(self, parent, widgetDefinitions):
-        widgets = []
-        for category, label, balloonHelp, command, min, resolution in widgetDefinitions:
-            widgets.append(
-                self.createFloater(parent, category, label, balloonHelp,
-                                   command, min, resolution)
-                )
-        return widgets
+        return [
+            self.createFloater(
+                parent, category, label, balloonHelp, command, min, resolution
+            )
+            for category, label, balloonHelp, command, min, resolution in widgetDefinitions
+        ]
 
     def createFloater(self, parent, category, text, balloonHelp,
                       command = None, min = 0.0, resolution = None,
@@ -781,7 +780,7 @@ class ParticlePanel(AppShell):
         widget['command'] = command
         widget.pack(fill = X)
         self.bind(widget, balloonHelp)
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def createAngleDial(self, parent, category, text, balloonHelp,
@@ -793,7 +792,7 @@ class ParticlePanel(AppShell):
         widget['command'] = command
         widget.pack(fill = X)
         self.bind(widget, balloonHelp)
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def createSlider(self, parent, category, text, balloonHelp,
@@ -808,7 +807,7 @@ class ParticlePanel(AppShell):
         widget['command'] = command
         widget.pack(fill = X)
         self.bind(widget, balloonHelp)
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def createVector2Entry(self, parent, category, text, balloonHelp,
@@ -820,7 +819,7 @@ class ParticlePanel(AppShell):
         widget['command'] = command
         widget.pack(fill = X)
         self.bind(widget, balloonHelp)
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def createVector3Entry(self, parent, category, text, balloonHelp,
@@ -832,7 +831,7 @@ class ParticlePanel(AppShell):
         widget['command'] = command
         widget.pack(fill = X)
         self.bind(widget, balloonHelp)
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def createColorEntry(self, parent, category, text, balloonHelp,
@@ -844,7 +843,7 @@ class ParticlePanel(AppShell):
         widget['command'] = command
         widget.pack(fill = X)
         self.bind(widget, balloonHelp)
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def createOptionMenu(self, parent, category, text, balloonHelp,
@@ -861,7 +860,7 @@ class ParticlePanel(AppShell):
         widget.pack(fill = X)
         self.bind(widget.component('menubutton'), balloonHelp)
         self.widgetDict[category + '-' + text] = widget
-        self.variableDict[category + '-' + text] = optionVar
+        self.variableDict[f'{category}-{text}'] = optionVar
         return optionVar
 
     def createComboBox(self, parent, category, text, balloonHelp,
@@ -885,7 +884,7 @@ class ParticlePanel(AppShell):
         # Bind help
         self.bind(widget, balloonHelp)
         # Record widget
-        self.widgetDict[category + '-' + text] = widget
+        self.widgetDict[f'{category}-{text}'] = widget
         return widget
 
     def updateMenusAndLabels(self):
@@ -895,10 +894,11 @@ class ParticlePanel(AppShell):
     def updateLabels(self):
         self.effectsLabel['text'] = self.particleEffect.getName()
         self.particlesLabel['text'] = self.particles.getName()
-        if self.forceGroup != None:
-            self.forceGroupLabel['text'] = self.forceGroup.getName()
-        else:
+        if self.forceGroup is None:
             self.forceGroupLabel['text'] = 'Force Group'
+
+        else:
+            self.forceGroupLabel['text'] = self.forceGroup.getName()
 
     def updateMenus(self):
         self.updateEffectsMenus()
@@ -981,20 +981,18 @@ class ParticlePanel(AppShell):
 
     def selectEffectNamed(self, name):
         effect = self.effectsDict.get(name, None)
-        if effect != None:
+        if effect is None:
+            print(f'ParticlePanel: No effect named {name}')
+
+        else:
             self.particleEffect = effect
             # Default to first particle in particlesDict
             self.particles = self.particleEffect.getParticlesList()[0]
             # See if particle effect has any forceGroup
             forceGroupList = self.particleEffect.getForceGroupList()
-            if len(forceGroupList) > 0:
-                self.forceGroup = forceGroupList[0]
-            else:
-                self.forceGroup = None
+            self.forceGroup = forceGroupList[0] if len(forceGroupList) > 0 else None
             self.mainNotebook.selectpage('System')
             self.updateInfo('System')
-        else:
-            print('ParticlePanel: No effect named ' + name)
 
     def toggleEffect(self, effect, var):
         if var.get():
@@ -1034,10 +1032,10 @@ class ParticlePanel(AppShell):
             force.setActive(0)
 
     def getWidget(self, category, text):
-        return self.widgetDict[category + '-' + text]
+        return self.widgetDict[f'{category}-{text}']
 
     def getVariable(self, category, text):
-        return self.variableDict[category + '-' + text]
+        return self.variableDict[f'{category}-{text}']
 
     def loadParticleEffectFromFile(self):
         # Find path to particle directory
@@ -1053,13 +1051,13 @@ class ParticlePanel(AppShell):
             print('ParticlePanel Warning: Invalid default DNA directory!')
             print('Using current directory')
             path = '.'
-        particleFilename = askopenfilename(
-            defaultextension = '.ptf',
-            filetypes = (('Particle Files', '*.ptf'),('All files', '*')),
-            initialdir = path,
-            title = 'Load Particle Effect',
-            parent = self.parent)
-        if particleFilename:
+        if particleFilename := askopenfilename(
+            defaultextension='.ptf',
+            filetypes=(('Particle Files', '*.ptf'), ('All files', '*')),
+            initialdir=path,
+            title='Load Particle Effect',
+            parent=self.parent,
+        ):
             # Delete existing particles and forces
             self.particleEffect.loadConfig(
                 Filename.fromOsSpecific(particleFilename))
@@ -1082,13 +1080,13 @@ class ParticlePanel(AppShell):
             print('ParticlePanel Warning: Invalid default DNA directory!')
             print('Using current directory')
             path = '.'
-        particleFilename = asksaveasfilename(
-            defaultextension = '.ptf',
-            filetypes = (('Particle Files', '*.ptf'),('All files', '*')),
-            initialdir = path,
-            title = 'Save Particle Effect as',
-            parent = self.parent)
-        if particleFilename:
+        if particleFilename := asksaveasfilename(
+            defaultextension='.ptf',
+            filetypes=(('Particle Files', '*.ptf'), ('All files', '*')),
+            initialdir=path,
+            title='Save Particle Effect as',
+            parent=self.parent,
+        ):
             self.particleEffect.saveConfig(Filename(particleFilename))
 
     ### PARTICLE EFFECTS COMMANDS ###
@@ -1557,10 +1555,8 @@ class ParticlePanel(AppShell):
                  color[2]/255.0, color[3]/255.0))
     # Geom #
     def setRendererGeomNode(self, event):
-        node = None
         nodePath = loader.loadModel(self.rendererGeomNode.get())
-        if nodePath != None:
-            node = nodePath.node()
+        node = nodePath.node() if nodePath != None else None
         if (node != None):
             self.particles.renderer.setGeomNode(node)
     # Point #
@@ -1657,12 +1653,10 @@ class ParticlePanel(AppShell):
         self.particles.renderer.setNonanimatedTheta(theta)
     def setRendererSpriteBlendMethod(self, blendMethod):
         print(blendMethod)
-        if blendMethod == 'PP_NO_BLEND':
-            bMethod = BaseParticleRenderer.PPNOBLEND
+        if blendMethod == 'PP_BLEND_CUBIC':
+            bMethod = BaseParticleRenderer.PPBLENDCUBIC
         elif blendMethod == 'PP_BLEND_LINEAR':
             bMethod = BaseParticleRenderer.PPBLENDLINEAR
-        elif blendMethod == 'PP_BLEND_CUBIC':
-            bMethod = BaseParticleRenderer.PPBLENDCUBIC
         else:
             bMethod = BaseParticleRenderer.PPNOBLEND
         self.particles.renderer.setAlphaBlendMethod(bMethod)
@@ -1673,19 +1667,20 @@ class ParticlePanel(AppShell):
     ## FORCEGROUP COMMANDS ##
     def updateForceWidgets(self):
         # Select appropriate notebook page
-        if self.forceGroup != None:
+        if self.forceGroup is None:
+            self.forceGroupNotebook.pack_forget()
+
+        else:
             self.forceGroupNotebook.pack(fill = X)
             self.forcePageName = (self.particleEffect.getName() + '-' +
                                   self.forceGroup.getName())
             self.forcePage = self.forcePagesDict.get(
                 self.forcePageName, None)
             # Page doesn't exist, add it
-            if self.forcePage == None:
+            if self.forcePage is None:
                 self.addForceGroupNotebookPage(
                     self.particleEffect, self.forceGroup)
             self.forceGroupNotebook.selectpage(self.forcePageName)
-        else:
-            self.forceGroupNotebook.pack_forget()
 
     def addLinearVectorForce(self):
         self.addForce(LinearVectorForce())
@@ -1705,16 +1700,14 @@ class ParticlePanel(AppShell):
         self.addForce(LinearUserDefinedForce())
 
     def addForce(self, f):
-        if self.forceGroup == None:
+        if self.forceGroup is None:
             self.createNewForceGroup()
         self.forceGroup.addForce(f)
         self.addForceWidget(self.forceGroup,f)
 
     ## SYSTEM COMMANDS ##
     def createNewEffect(self):
-        name = askstring('Particle Panel', 'Effect Name:',
-                         parent = self.parent)
-        if name:
+        if name := askstring('Particle Panel', 'Effect Name:', parent=self.parent):
             particles = seParticles.Particles()
             particles.setBirthRate(0.02)
             particles.setLitterSize(10)
@@ -1736,9 +1729,9 @@ class ParticlePanel(AppShell):
             messenger.send('SGE_Update Explorer',[render])
 
     def createNewParticles(self):
-        name = askstring('Particle Panel', 'Particles Name:',
-                         parent = self.parent)
-        if name:
+        if name := askstring(
+            'Particle Panel', 'Particles Name:', parent=self.parent
+        ):
             p = seParticles.Particles(name)
             p.setBirthRate(0.02)
             p.setLitterSize(10)
@@ -1752,9 +1745,9 @@ class ParticlePanel(AppShell):
             p.enable()
 
     def createNewForceGroup(self):
-        name = askstring('Particle Panel', 'ForceGroup Name:',
-                         parent = self.parent)
-        if name:
+        if name := askstring(
+            'Particle Panel', 'ForceGroup Name:', parent=self.parent
+        ):
             forceGroup = seForceGroup.ForceGroup(name)
             self.particleEffect.addForceGroup(forceGroup)
             self.updateForceGroupMenus()
@@ -1774,10 +1767,7 @@ class ParticlePanel(AppShell):
         forcePage = self.forcePage
         pageName = self.forcePageName
         # How many forces of the same type in the force group object
-        count = 0
-        for f in forceGroup:
-            if f.getClassType().eq(force.getClassType()):
-                count += 1
+        count = sum(1 for f in forceGroup if f.getClassType().eq(force.getClassType()))
         if isinstance(force, LinearVectorForce):
             self.createLinearVectorForceWidget(
                 forcePage, pageName, count, force)
@@ -1799,9 +1789,6 @@ class ParticlePanel(AppShell):
         elif isinstance(force, LinearSourceForce):
             self.createLinearDistanceForceWidget(
                 forcePage, pageName, count, force, 'Source')
-        elif isinstance(force, LinearUserDefinedForce):
-            # Nothing
-            pass
         self.forceGroupNotebook.setnaturalsize()
 
     def createForceFrame(self, forcePage, forceName, force):
@@ -1825,11 +1812,11 @@ class ParticlePanel(AppShell):
         def setAmplitude(amp, f = force):
             f.setAmplitude(amp)
         def toggleMassDependent(s=self, f=force, p=pageName, n=forceName):
-            v = s.getVariable(p, n+' Mass Dependent')
+            v = s.getVariable(p, f'{n} Mass Dependent')
             f.setMassDependent(v.get())
         def setVectorMasks(s=self, f=force, p=pageName, n=forceName):
             xMask = s.getVariable(p, n+' Mask X').get()
-            yMask = s.getVariable(p, n+' Mask Y').get()
+            yMask = s.getVariable(p, f'{n} Mask Y').get()
             zMask = s.getVariable(p, n+' Mask Z').get()
             f.setVectorMasks(xMask, yMask, zMask)
         self.createFloater(frame, pageName, forceName + ' Amplitude',
@@ -1877,7 +1864,7 @@ class ParticlePanel(AppShell):
 
     def createLinearRandomForceWidget(self, forcePage, pageName, count,
                                 force, type):
-        forceName = type + ' Force-' + repr(count)
+        forceName = f'{type} Force-' + repr(count)
         frame = self.createForceFrame(forcePage, forceName, force)
         self.createLinearForceWidgets(frame, pageName, forceName, force)
         self.createForceActiveWidget(frame, pageName, forceName, force)
