@@ -214,7 +214,7 @@ class AnimPanel(AppShell):
         # This function will update the list of animations that the Actor
         # currently has into the combo box widget.
         #################################################################
-        self.ignore('DataH_loadFinish'+self.nodeName)
+        self.ignore(f'DataH_loadFinish{self.nodeName}')
         del self.loaderWindow
         self['animList'] = self['actor'].getAnimNames()
         animL = self['actor'].getAnimNames()
@@ -231,9 +231,9 @@ class AnimPanel(AppShell):
         # make sure that target animation has been removed.
         #################################################################
         name = self.AnimEntry.get()
-        if taskMgr.hasTaskNamed(self.id + '_UpdateTask'):
+        if taskMgr.hasTaskNamed(f'{self.id}_UpdateTask'):
             self.stop()
-        self.accept('DataH_removeAnimFinish'+self.nodeName,self.afterRemove)
+        self.accept(f'DataH_removeAnimFinish{self.nodeName}', self.afterRemove)
         messenger.send('AW_removeAnim',[self['actor'],name])
         return
 
@@ -244,7 +244,7 @@ class AnimPanel(AppShell):
         # message from dataHolder. This function will call setList to
         # reset the list of Animations
         #################################################################
-        self.ignore('DataH_removeAnimFinish'+self.nodeName)
+        self.ignore(f'DataH_removeAnimFinish{self.nodeName}')
         self['animList'] = self['actor'].getAnimNames()
         animL = self['actor'].getAnimNames()
         self.AnimEntry.setlist(animL)
@@ -258,7 +258,7 @@ class AnimPanel(AppShell):
         # the animation he wants to load in for this actor.
         #################################################################
         self.loaderWindow = LoadAnimPanel(aNode=self['actor'])
-        self.accept('DataH_loadFinish'+self.nodeName,self.updateList)
+        self.accept(f'DataH_loadFinish{self.nodeName}', self.updateList)
         return
 
     def play(self):
@@ -273,7 +273,7 @@ class AnimPanel(AppShell):
             animName = self.AnimEntry.get()
             self.playButton.config(state=DISABLED)
             self.lastT = globalClock.getFrameTime()
-            taskMgr.add(self.playTask, self.id + '_UpdateTask')
+            taskMgr.add(self.playTask, f'{self.id}_UpdateTask')
             self.stopButton.config(state=NORMAL)
         else:
             print('----Illegal Animaion name!!', self.animName)
@@ -315,7 +315,7 @@ class AnimPanel(AppShell):
         # This function will remove the play task from taskMgr when user
         # click on the "Stop" button
         #################################################################
-        taskMgr.remove(self.id + '_UpdateTask')
+        taskMgr.remove(f'{self.id}_UpdateTask')
         self.playButton.config(state=NORMAL)
         self.stopButton.config(state=DISABLED)
         return
@@ -404,7 +404,7 @@ class AnimPanel(AppShell):
             frame = float(frame)
             # Now convert t to seconds for offset calculations
             if self.unitsVar.get() == FRAMES:
-                frame = frame / self.fps
+                frame /= self.fps
             if self.dragMode:
                 # If user is clicking on the slider and is draging the bar, reset the global timer.
                 self.currTime = frame
@@ -450,13 +450,12 @@ class AnimPanel(AppShell):
 
     def onDestroy(self, event):
         if taskMgr.hasTaskNamed(self.id + '_UpdateTask'):
-            taskMgr.remove(self.id + '_UpdateTask')
+            taskMgr.remove(f'{self.id}_UpdateTask')
         self.ignore('DataH_loadFinish')
         messenger.send('AW_close',[self.nodeName])
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass
 
 class LoadAnimPanel(AppShell):
     #################################################################
@@ -541,7 +540,6 @@ class LoadAnimPanel(AppShell):
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass
 
     def selectAnim(self,name):
         #################################################################
@@ -553,21 +551,17 @@ class LoadAnimPanel(AppShell):
         return
 
     def Browse_1(self):
-        #################################################################
-        # Browse_1(self)
-        # when the browse button pused, this function will be called.
-        # Do nothing but open a file dialog for user to set the path to target file
-        # Then, set the path back to the entry on the panel.
-        #################################################################
-        AnimFilename = askopenfilename(
-            defaultextension = '.egg',
-            filetypes = (('Egg Files', '*.egg'),
-                         ('Bam Files', '*.bam'),
-                         ('All files', '*')),
-            initialdir = '.',
-            title = 'File Path for Anim 1',
-            parent = self.parent)
-        if AnimFilename:
+        if AnimFilename := askopenfilename(
+            defaultextension='.egg',
+            filetypes=(
+                ('Egg Files', '*.egg'),
+                ('Bam Files', '*.bam'),
+                ('All files', '*'),
+            ),
+            initialdir='.',
+            title='File Path for Anim 1',
+            parent=self.parent,
+        ):
             self.AnimFile_1.setvalue(AnimFilename)
         return
 
@@ -584,9 +578,7 @@ class LoadAnimPanel(AppShell):
         #################################################################
         name = self.AnimName_1.get()
         self.animDic[name] = Filename.fromOsSpecific(self.AnimFile_1.getvalue()).getFullpath()
-        if name in self.animList:
-            pass
-        else:
+        if name not in self.animList:
             self.animList.append(name)
         self.AnimName_1.setlist(self.animList)
         print(self.animDic)

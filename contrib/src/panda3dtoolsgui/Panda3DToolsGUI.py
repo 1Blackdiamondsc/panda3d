@@ -187,18 +187,19 @@ class OutputDialogpview(wx.Dialog):
     def RunPview(self,e):#pview function
         filename = self.pview_modelFile.GetValue()
         anim_filename = self.pview_animFile.GetValue()
-        args = {}
-        args['filename'] = str(filename)
-        args['animfilename'] = str(anim_filename)
+        args = {'filename': str(filename), 'animfilename': str(anim_filename)}
+        extension = ".exe" if sys.platform == "win32" else ""
+        command = (
+            f'pview{extension} '
+            + '"'
+            + args['filename']
+            + '"'
+            + ' '
+            + '"'
+            + args['animfilename']
+            + '"'
+        )
 
-        if sys.platform == "win32":
-            extension = ".exe"
-        elif sys.platform == "darwin": #OSX
-            extension = ""
-        else: #Linux and UNIX
-            extension = ""
-
-        command = "pview" + extension +  ' ' +  '"' +args['filename'] + '"'+  ' ' +  '"' + args['animfilename'] + '"'
 
         try:
             p = subprocess.Popen(command, shell = True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines = True )

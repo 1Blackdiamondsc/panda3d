@@ -40,10 +40,7 @@ class BlendAnimPanel(AppShell):
         self.appname = self.id
         self.actorNode = aNode
         self.blendDict = blendDict.copy()
-        if len(blendDict)>0:
-            self.blendList = blendDict.keys()
-        else:
-            self.blendList = []
+        self.blendList = blendDict.keys() if len(blendDict)>0 else []
         optiondefs = (
             ('title',               self.appname,       None),
             ('actor',               aNode,              None),
@@ -298,10 +295,10 @@ class BlendAnimPanel(AppShell):
         if (self.animNameA in self['animList'])and(self.animNameB in self['animList']):
             self.playButton.config(state=DISABLED)
             self.lastT = globalClock.getFrameTime()
-            taskMgr.add(self.playTask, self.id + '_UpdateTask')
+            taskMgr.add(self.playTask, f'{self.id}_UpdateTask')
             self.stopButton.config(state=NORMAL)
         else:
-            print('----Illegal Animaion name!!', self.animNameA +  ',  '+ self.animNameB)
+            print('----Illegal Animaion name!!', f'{self.animNameA},  {self.animNameB}')
         return
 
     def playTask(self, task):
@@ -335,7 +332,7 @@ class BlendAnimPanel(AppShell):
         # stop(self)
         # see play(self)
         #################################################################
-        taskMgr.remove(self.id + '_UpdateTask')
+        taskMgr.remove(f'{self.id}_UpdateTask')
         self.playButton.config(state=NORMAL)
         self.stopButton.config(state=DISABLED)
         return
@@ -379,12 +376,12 @@ class BlendAnimPanel(AppShell):
         # updateDisplay(self)
         # see play(self)
         #################################################################
-        if not (self.animNameA in self['animList']):
+        if self.animNameA not in self['animList']:
             return
         self.fps = self['actor'].getFrameRate(self.animNameA)
         self.duration = self['actor'].getDuration(self.animNameA)
         self.maxFrame = self['actor'].getNumFrames(self.animNameA) - 1
-        if not (self.animNameB in self['animList']):
+        if self.animNameB not in self['animList']:
             return
         if self.duration > self['actor'].getDuration(self.animNameB):
             self.duration = self['actor'].getDuration(self.animNameB)
@@ -427,7 +424,7 @@ class BlendAnimPanel(AppShell):
             frame = float(frame)
             # Now convert t to seconds for offset calculations
             if self.unitsVar.get() == FRAMES:
-                frame = frame / self.fps
+                frame /= self.fps
             if self.dragMode:
                 self.currTime = frame
             self['actor'].pose(self.animNameA,
@@ -542,10 +539,7 @@ class BlendAnimPanel(AppShell):
         del self.blendDict
         self.blendDict = dict.copy()
         print(self.blendDict)
-        if len(self.blendDict)>0:
-            self.blendList = self.blendDict.keys()
-        else:
-            self.blendList = []
+        self.blendList = self.blendDict.keys() if len(self.blendDict)>0 else []
         self.blendAnimEntry.setlist(self.blendList)
         if select:
             if len(self.blendList)>0:
@@ -573,7 +567,10 @@ class BlendAnimPanel(AppShell):
                               defaultbutton = 'Close'
                               )
             return
-        elif (not(self.animNameA in self['animList']))or(not(self.animNameB in self['animList'])):
+        elif (
+            self.animNameA not in self['animList']
+            or self.animNameB not in self['animList']
+        ):
             Pmw.MessageDialog(None, title='Caution!',
                               message_text = 'The Animations you have selected are not exist!',
                               iconpos='s',
@@ -610,7 +607,7 @@ class BlendAnimPanel(AppShell):
         #################################################################
         oName = self.currentBlendName
         name = self.blendAnimEntry.get()
-        if self.currentBlendName == None:
+        if self.currentBlendName is None:
             Pmw.MessageDialog(None, title='Caution!',
                               message_text = "You haven't select any blended animation!!",
                               iconpos='s',
@@ -624,7 +621,10 @@ class BlendAnimPanel(AppShell):
                               defaultbutton = 'Close'
                               )
             return
-        elif (not(self.animNameA in self['animList']))or(not(self.animNameB in self['animList'])):
+        elif (
+            self.animNameA not in self['animList']
+            or self.animNameB not in self['animList']
+        ):
             Pmw.MessageDialog(None, title='Caution!',
                               message_text = 'The Animations you have selected are not exist!',
                               iconpos='s',
@@ -652,7 +652,7 @@ class BlendAnimPanel(AppShell):
         # the animation via animation panel will cause some error.
         #################################################################
         if taskMgr.hasTaskNamed(self.id + '_UpdateTask'):
-            taskMgr.remove(self.id + '_UpdateTask')
+            taskMgr.remove(f'{self.id}_UpdateTask')
         messenger.send('BAW_close',[self.nodeName])
         self.actorNode.setControlEffect(self.animNameA, 1.0, 'modelRoot','lodRoot')
         self.actorNode.setControlEffect(self.animNameB, 1.0, 'modelRoot','lodRoot')
@@ -660,4 +660,3 @@ class BlendAnimPanel(AppShell):
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass

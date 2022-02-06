@@ -47,7 +47,7 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
             )
         self.defineoptions(kw, optiondefs)
 
-        if parent == None:
+        if parent is None:
             self.parent = Toplevel()
         AppShell.__init__(self, self.parent)
 
@@ -77,34 +77,28 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
         # Creating different interface depands on object's type
         if self.type == 'camera':
             self.cameraInterface(self.contentFrame)
-            self.accept('forPorpertyWindow'+self.name, self.trackDataFromSceneCamera)
+            self.accept(f'forPorpertyWindow{self.name}', self.trackDataFromSceneCamera)
         elif self.type == 'Model':
             self.modelInterface(self.contentFrame)
-            self.accept('forPorpertyWindow'+self.name, self.trackDataFromSceneModel)
+            self.accept(f'forPorpertyWindow{self.name}', self.trackDataFromSceneModel)
         elif self.type == 'Actor':
             self.modelInterface(self.contentFrame)
             self.actorInterface(self.contentFrame)
-            self.accept('forPorpertyWindow'+self.name, self.trackDataFromSceneActor)
-            pass
+            self.accept(f'forPorpertyWindow{self.name}', self.trackDataFromSceneActor)
         elif self.type == 'Light':
             self.lightInterface(self.contentFrame)
-            self.accept('forPorpertyWindow'+self.name, self.trackDataFromSceneLight)
-            pass
+            self.accept(f'forPorpertyWindow{self.name}', self.trackDataFromSceneLight)
         elif self.type == 'dummy':
             self.dummyInterface(self.contentFrame)
-            self.accept('forPorpertyWindow'+self.name, self.trackDataFromSceneDummy)
-            pass
+            self.accept(f'forPorpertyWindow{self.name}', self.trackDataFromSceneDummy)
         elif self.type == 'collisionNode':
             self.collisionInterface(self.contentFrame)
-            self.accept('forPorpertyWindow'+self.name, self.trackDataFromSceneCollision)
-            pass
+            self.accept(f'forPorpertyWindow{self.name}', self.trackDataFromSceneCollision)
         elif self.type == 'Special':
             # If user try to open the property window for node "SEditor"
             # It will show the grid property.
             self.gridInterface(self.contentFrame)
-            self.accept('forPorpertyWindow'+self.name, None)
-            pass
-
+            self.accept(f'forPorpertyWindow{self.name}', None)
         self.curveFrame = None
         #### If nodePath has been binded with any curves
         if 'curveList' in self.info:
@@ -119,12 +113,11 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
         self.menuBar.destroy()
 
     def onDestroy(self, event):
-        self.ignore('forPorpertyWindow'+self.name)
+        self.ignore(f'forPorpertyWindow{self.name}')
         messenger.send('PW_close', [self.name])
         '''
         If you have open any thing, please rewrite here!
         '''
-        pass
 
     def createEntryField(self, parent,text, value,
                          command, initialState, labelWidth = 12,
@@ -152,7 +145,7 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
             # create a button if they need.
             widget = Button(frame, text=buttonText, font=('MSSansSerif', 10), command = defaultFunction)
             widget.pack(side=LEFT, padx=3)
-            self.widgetsDict[text+'-'+'DefaultButton']=widget
+            self.widgetsDict[f'{text}-DefaultButton'] = widget
 
         frame.pack(side = side, fill = fill, expand = expand,pady=3)
 
@@ -325,15 +318,13 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
         # This function will draw the property frame and content of curves
         # pass the target frame as a variable
         #################################################################
-        if self.curveFrame==None:
+        if self.curveFrame is None:
             self.curveFrame = Frame(contentFrame)
             group = Pmw.Group(self.curveFrame,
                               tag_text='Motion Path List for this Node',
                               tag_font=('MSSansSerif', 10))
             innerFrame = group.interior()
-            n = 0
-            for curve in self.info['curveList']:
-                n += 1
+            for n, curve in enumerate(self.info['curveList'], start=1):
                 self.createEntryField(innerFrame,'Curve %d:' %n,
                                       value = curve.getCurve(0).getName(),
                                       command = None,
@@ -927,25 +918,25 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
         return
 
     def setLightingColorVec(self,color):
-        if self.lightNode==None:
+        if self.lightNode is None:
             return
         self.lightNode.setColor(VBase4((color[0]/255),(color[1]/255),(color[2]/255),1))
         return
 
     def setSpecularColor(self,color):
-        if self.lightNode==None:
+        if self.lightNode is None:
             return
         self.lightNode.setSpecColor(VBase4((color[0]/255),(color[1]/255),(color[2]/255),1))
         return
 
     def setPosition(self,position):
-        if self.lightNode==None:
+        if self.lightNode is None:
             return
         self.lightNode.setPosition(Point3(position[0],position[1],position[2]))
         return
 
     def setOrientation(self, orient):
-        if self.lightNode==None:
+        if self.lightNode is None:
             return
         self.lightNode.setOrientation(Vec3(orient[0],orient[1],orient[2]))
         return
@@ -1176,8 +1167,6 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
             self.scaleS.pack(side=LEFT,expand=0,fill=X)
 
             scaleInterior.pack(side=TOP,expand=0,fill=X, padx=3, pady=3)
-            pass
-
         elif cType == 'CollisionPolygon':
             frame = Frame(cObjFrame)
             label = Label(frame, text= "Sorry!",font=('MSSansSerif', 10),
@@ -1199,8 +1188,6 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
                           borderwidth=5)
             label.pack(side=LEFT)
             frame.pack(side=TOP, fill=X, expand=True)
-            pass
-
         elif cType == 'CollisionSegment':
             pointA = self.collisionObj.getPointA()
             pointB = self.collisionObj.getPointB()
@@ -1272,7 +1259,6 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
             self.cPosZB.pack(side=LEFT, expand=0,fill=X, padx=1)
             posInterior.pack(side=TOP, expand=0,fill=X, padx=3, pady=3)
             group.pack(side=TOP,fill = X, expand = 0, pady=3)
-            pass
         elif cType == 'CollisionRay':
             origin = self.collisionObj.getOrigin()
             direction = self.collisionObj.getDirection()
@@ -1344,8 +1330,6 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
             self.cPosZB.pack(side=LEFT, expand=0,fill=X, padx=1)
             posInterior.pack(side=TOP, expand=0,fill=X, padx=3, pady=3)
             group.pack(side=TOP,fill = X, expand = 0, pady=3)
-            pass
-
         collisionGroup.pack(side=TOP,fill = X, expand = 0, pady=3)
 
         return
@@ -1426,11 +1410,8 @@ class propertyWindow(AppShell,Pmw.MegaWidget):
         if self.lightNode.type == 'directional':
             self.dPosition.set([pos.getX(),pos.getY(),pos.getZ()])
             self.dOrientation.set([hpr.getX(),hpr.getY(),hpr.getZ()])
-            pass
-
         elif self.lightNode.type == 'point':
             self.pPosition.set([pos.getX(),pos.getY(),pos.getZ()])
-            pass
         return
 
     def trackDataFromSceneDummy(self, pos=Point3(0,0,0), hpr=Vec3(0,0,0), scale=Point3(0,0,0)):

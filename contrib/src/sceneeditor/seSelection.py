@@ -88,13 +88,11 @@ class SelectedNodePaths(DirectObject):
             if dnp:
                 # Remove it from the deselected dictionary
                 del(self.deselectedDict[id])
-                # Show its bounding box
-                dnp.highlight()
             else:
                 # Didn't find it, create a new selectedNodePath instance
                 dnp = DirectNodePath(nodePath)
-                # Show its bounding box
-                dnp.highlight()
+            # Show its bounding box
+            dnp.highlight()
             # Add it to the selected dictionary
             self.selectedDict[dnp.get_key()] = dnp
         # And update last
@@ -133,12 +131,7 @@ class SelectedNodePaths(DirectObject):
         """
         Search selectedDict for node path, try to repair broken node paths.
         """
-        dnp = self.selectedDict.get(id, None)
-        if dnp:
-            return dnp
-        else:
-            # Not in selected dictionary
-            return None
+        return dnp if (dnp := self.selectedDict.get(id, None)) else None
 
     def getDeselectedAsList(self):
         return list(self.deselectedDict.values())
@@ -147,13 +140,7 @@ class SelectedNodePaths(DirectObject):
         """
         Search deselectedDict for node path, try to repair broken node paths.
         """
-        dnp = self.deselectedDict.get(id, None)
-        if dnp:
-            # Yes
-            return dnp
-        else:
-            # Not in deselected dictionary
-            return None
+        return dnp if (dnp := self.deselectedDict.get(id, None)) else None
 
     def forEachSelectedNodePathDo(self, func):
         """
@@ -195,8 +182,7 @@ class SelectedNodePaths(DirectObject):
         self.forEachSelectedNodePathDo(DirectNodePath.dehighlight)
 
     def removeSelected(self):
-        selected = self.last
-        if selected:
+        if selected := self.last:
             selected.remove()
         __builtins__["last"] = self.last = None
 
@@ -211,9 +197,7 @@ class SelectedNodePaths(DirectObject):
             nodePath.hide()
 
     def toggleVisSelected(self):
-        selected = self.last
-        # Toggle visibility of selected node paths
-        if selected:
+        if selected := self.last:
             if selected.is_hidden():
                 selected.show()
             else:
@@ -224,16 +208,13 @@ class SelectedNodePaths(DirectObject):
         self.forEachSelectedNodePathDo(self.toggleVis)
 
     def isolateSelected(self):
-        selected = self.last
-        if selected:
+        if selected := self.last:
             selected.isolate()
 
     def getDirectNodePath(self, nodePath):
         # Get this pointer
         id = nodePath.get_key()
-        # First check selected dict
-        dnp = self.getSelectedDict(id)
-        if dnp:
+        if dnp := self.getSelectedDict(id):
             return dnp
         # Otherwise return result of deselected search
         return self.getDeselectedDict(id)
@@ -526,12 +507,10 @@ class SelectionQueue(CollisionHandlerQueue):
                   (camera in nodePath.getAncestors())):
                 # Skip if parented to a camera.
                 pass
-            # Can pick unpickable, use the first visible node
-            elif ((skipFlags & SKIP_UNPICKABLE) and
-                  (nodePath.getName() in self.unpickable)):
-                # Skip if in unpickable list
-                pass
-            else:
+            elif (
+                not skipFlags & SKIP_UNPICKABLE
+                or nodePath.getName() not in self.unpickable
+            ):
                 self.setCurrentIndex(i)
                 self.setCurrentEntry(entry)
                 break
@@ -623,7 +602,7 @@ class SelectionSegment(SelectionQueue):
         SelectionQueue.__init__(self, parentNP)
         self.colliders = []
         self.numColliders = 0
-        for i in range(numSegments):
+        for _ in range(numSegments):
             self.addCollider(CollisionSegment())
 
     def addCollider(self, collider):
@@ -666,7 +645,7 @@ class SelectionSphere(SelectionQueue):
         SelectionQueue.__init__(self, parentNP)
         self.colliders = []
         self.numColliders = 0
-        for i in range(numSpheres):
+        for _ in range(numSpheres):
             self.addCollider(CollisionSphere(Point3(0), 1))
 
     def addCollider(self, collider):

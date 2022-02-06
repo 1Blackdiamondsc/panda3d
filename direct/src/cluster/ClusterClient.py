@@ -156,23 +156,17 @@ class ClusterClient(DirectObject.DirectObject):
 
 
     def redoSortedPriorities(self):
-        self.sortedControlMappings = []
-        for key in self.controlMappings:
-            self.sortedControlMappings.append([self.controlPriorities[key],
-                                               key])
-
+        self.sortedControlMappings = [[self.controlPriorities[key],
+                                               key] for key in self.controlMappings]
         self.sortedControlMappings.sort()
 
     def moveObject(self, nodePath, object, serverList, offset, hasColor = True):
-        self.notify.debug('moving object '+object)
+        self.notify.debug(f'moving object {object}')
         xyz = nodePath.getPos(render) + offset
         hpr = nodePath.getHpr(render)
         scale = nodePath.getScale(render)
         hidden = nodePath.isHidden()
-        if hasColor:
-            color = nodePath.getColor()
-        else:
-            color = [1,1,1,1]
+        color = nodePath.getColor() if hasColor else [1,1,1,1]
         for server in serverList:
             self.serverList[server].sendMoveNamedObject(xyz,hpr,scale,color,hidden,object)
 
@@ -209,7 +203,7 @@ class ClusterClient(DirectObject.DirectObject):
             self.objectMappings[name] = object
             self.objectHasColor[name] = hasColor
         else:
-            self.notify.debug('attempt to add duplicate named object: '+name)
+            self.notify.debug(f'attempt to add duplicate named object: {name}')
 
     def removeObjectMapping(self,name):
         if name in self.objectMappings:
@@ -229,9 +223,7 @@ class ClusterClient(DirectObject.DirectObject):
             self.controlPriorities[objectName] = priority
         else:
             oldList = self.controlMappings[objectName]
-            mergedList = []
-            for item in oldList:
-                mergedList.append(item)
+            mergedList = list(oldList)
             for item in serverList:
                 if item not in mergedList:
                     mergedList.append(item)
@@ -250,12 +242,9 @@ class ClusterClient(DirectObject.DirectObject):
                 self.controlPriorities.pop(name)
             else:
                 oldList = self.controlMappings[key][1]
-                newList = []
-                for server in oldList:
-                    if server not in serverList:
-                        newList.append(server)
+                newList = [server for server in oldList if server not in serverList]
                 self.controlMappings[key][1] = newList
-                if len(newList) == 0:
+                if not newList:
                     self.controlMappings.pop(name)
                     self.controlPriorities.pop(name)
         self.redoSortedPriorities()
@@ -264,29 +253,26 @@ class ClusterClient(DirectObject.DirectObject):
     def getNodePathFindCmd(self, nodePath):
         pathString = repr(nodePath)
         index = pathString.find('/')
-        if index != -1:
-            rootName = pathString[:index]
-            searchString = pathString[index+1:]
-            return rootName + ('.find("%s")' % searchString)
-        else:
+        if index == -1:
             return rootName
+        rootName = pathString[:index]
+        searchString = pathString[index+1:]
+        return rootName + ('.find("%s")' % searchString)
 
     def getNodePathName(self, nodePath):
         pathString = repr(nodePath)
         index = pathString.find('/')
-        if index != -1:
-            name = pathString[index+1:]
-            return name
-        else:
-            return pathString
+        return pathString[index+1:] if index != -1 else pathString
 
 
     def addObjectTag(self,object,selectFunction,deselectFunction,selectArgs,deselectArgs):
-        newTag = {}
-        newTag["selectFunction"] = selectFunction
-        newTag["selectArgs"]     = selectArgs
-        newTag["deselectFunction"] = deselectFunction
-        newTag["deselectArgs"]     = deselectArgs
+        newTag = {
+            'selectFunction': selectFunction,
+            'selectArgs': selectArgs,
+            'deselectFunction': deselectFunction,
+            'deselectArgs': deselectArgs,
+        }
+
         self.taggedObjects[object] = newTag
 
 
@@ -388,7 +374,7 @@ class ClusterClient(DirectObject.DirectObject):
             else:
                 self.objectMappings[name].show()
         else:
-            self.notify.debug("recieved unknown named object command: "+name)
+            self.notify.debug(f'recieved unknown named object command: {name}')
 
 
     def exit(self):
@@ -448,14 +434,12 @@ class DisplayConnection:
         # A giant 300 second timeout.
         self.tcpConn = qcm.openTCPClientConnection(
             serverName, port, gameServerTimeoutMs)
-        # Test for bad connection
         if self.tcpConn is None:
             return None
-        else:
-            self.tcpConn.setNoDelay(1)
-            self.qcr=QueuedConnectionReader(qcm, 0)
-            self.qcr.addConnection(self.tcpConn)
-            self.cw=ConnectionWriter(qcm, 0)
+        self.tcpConn.setNoDelay(1)
+        self.qcr=QueuedConnectionReader(qcm, 0)
+        self.qcr.addConnection(self.tcpConn)
+        self.cw=ConnectionWriter(qcm, 0)
 
 
 
@@ -657,15 +641,12 @@ def createClusterClient():
                 if fl and fs and fo:
                     cci.setCamFrustum(fl, fs, fo)
                 displayConfigs.append(cci)
-    # Create Cluster Managers (opening connections to servers)
-    # Are the servers going to be synced?
-    if base.clusterSyncFlag:
-        base.notify.warning('autoflip')
-        base.graphicsEngine.setAutoFlip(0)
-        base.notify.warning('ClusterClientSync')
-        return ClusterClientSync(displayConfigs, base.clusterSyncFlag)
-    else:
+    if not base.clusterSyncFlag:
         return ClusterClient(displayConfigs, base.clusterSyncFlag)
+    base.notify.warning('autoflip')
+    base.graphicsEngine.setAutoFlip(0)
+    base.notify.warning('ClusterClientSync')
+    return ClusterClientSync(displayConfigs, base.clusterSyncFlag)
 
 
 class DummyClusterClient(DirectObject.DirectObject):

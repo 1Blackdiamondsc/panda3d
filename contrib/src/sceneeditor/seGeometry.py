@@ -166,10 +166,8 @@ def getScreenXY(nodePath):
     # What percentage of the distance across the screen is this?
     percentX = (nearX - SEditor.dr.left)/SEditor.dr.nearWidth
     percentY = (nearY - SEditor.dr.bottom)/SEditor.dr.nearHeight
-    # Map this percentage to the same -1 to 1 space as the mouse
-    screenXY = Vec3((2 * percentX) - 1.0,nearVec[1],(2 * percentY) - 1.0)
     # Return the resulting value
-    return screenXY
+    return Vec3((2 * percentX) - 1.0,nearVec[1],(2 * percentY) - 1.0)
 
 def getCrankAngle(center):
     # Used to compute current angle of mouse (relative to the coa's

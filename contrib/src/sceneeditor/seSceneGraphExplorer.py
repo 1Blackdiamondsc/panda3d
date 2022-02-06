@@ -159,11 +159,10 @@ class SceneGraphExplorerItem(TreeItem):
     def GetText(self):
         type = self.nodePath.node().getType().getName()
         name = self.nodePath.getName()
-        return type + "  " + name
+        return f'{type}  {name}'
 
     def GetTextForEdit(self):
-        name = self.nodePath.getName()
-        return name
+        return self.nodePath.getName()
 
     def GetKey(self):
         return self.nodePath.get_key()
@@ -200,7 +199,7 @@ class SceneGraphExplorerItem(TreeItem):
             messenger.send('SGE_madeSelection', [self.nodePath])
 
     def MenuCommand(self, command):
-        messenger.send('SGE_' + command, [self.nodePath])
+        messenger.send(f'SGE_{command}', [self.nodePath])
 
 
 def explore(nodePath = render):

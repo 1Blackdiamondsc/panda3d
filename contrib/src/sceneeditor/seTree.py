@@ -81,22 +81,20 @@ class TreeNode:
             return
         self.deselectall()
         self.selected = 1
-        if self.parent != None:
-            if self.parent.state == 'expanded':
-                self.canvas.delete(self.image_id)
-                self.drawicon()
-                self.drawtext()
+        if self.parent != None and self.parent.state == 'expanded':
+            self.canvas.delete(self.image_id)
+            self.drawicon()
+            self.drawtext()
         self.item.OnSelect(event)
 
     def deselect(self, event=None):
         if not self.selected:
             return
         self.selected = 0
-        if self.parent != None:
-            if self.parent.state == 'expanded':
-                self.canvas.delete(self.image_id)
-                self.drawicon()
-                self.drawtext()
+        if self.parent != None and self.parent.state == 'expanded':
+            self.canvas.delete(self.image_id)
+            self.drawicon()
+            self.drawtext()
 
     def deselectall(self):
         if self.parent:
@@ -166,11 +164,10 @@ class TreeNode:
         # Make sure all parent nodes are marked as expanded
         parent = self.parent
         while parent:
-            if parent.state == 'collapsed':
-                parent.state = 'expanded'
-                parent = parent.parent
-            else:
+            if parent.state != 'collapsed':
                 break
+            parent.state = 'expanded'
+            parent = parent.parent
         # Redraw tree accordingly
         self.update()
         # Bring this item into view
@@ -263,15 +260,14 @@ class TreeNode:
     def drawtext(self, text=None):
         textx = self.x+20-1
         texty = self.y-1
-        labeltext = self.item.GetLabelText()
-        if labeltext:
+        if labeltext := self.item.GetLabelText():
             id = self.canvas.create_text(textx, texty, anchor="nw",
                                          text=labeltext)
             self.canvas.tag_bind(id, "<1>", self.select)
             self.canvas.tag_bind(id, "<Double-1>", self.flip)
             x0, y0, x1, y1 = self.canvas.bbox(id)
             textx = max(x1, 200) + 10
-        if text==None:
+        if text is None:
             text = self.item.GetText() or "<no text>"
         try:
             self.entry
@@ -353,9 +349,7 @@ class TreeNode:
                 # Update local list of children and keys
                 self.children[key] = child
                 self.kidKeys.append(key)
-            # See if node is child (or one of child's descendants)
-            retVal = child.find(searchKey)
-            if retVal:
+            if retVal := child.find(searchKey):
                 return retVal
         # Not here
         return None
@@ -387,10 +381,7 @@ class TreeItem:
 
     def _GetSubList(self):
         """Do not override!  Called by TreeNode."""
-        if not self.IsExpandable():
-            return []
-        sublist = self.GetSubList()
-        return sublist
+        return [] if not self.IsExpandable() else self.GetSubList()
 
     def IsEditable(self):
         """Return whether the item's text may be edited."""

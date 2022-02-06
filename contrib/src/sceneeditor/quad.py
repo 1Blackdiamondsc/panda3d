@@ -71,9 +71,9 @@ class ViewPort:
         self.the_viewport.setCamera(self.cam)
 
     def resizeX(self,width_increment):
-        if(self.VPType=="top" or self.VPType=="left"):
+        if self.VPType in ["top", "left"]:
             self.the_viewport.setDimensions(self.VP_X1,self.VP_X2+width_increment,self.VP_Y1,self.VP_Y2)
-        elif(self.VPType=="perspective" or self.VPType=="front"):
+        elif self.VPType in ["perspective", "front"]:
             self.the_viewport.setDimensions(self.VP_X1+width_increment,self.VP_X2,self.VP_Y1,self.VP_Y2)
 
     def resizeY(self,height_increment,direction):
@@ -455,16 +455,15 @@ class QuadView(DirectObject):
 
     def setAppropriateViewPort(self,x,y):
         #print "SET APPROPRIATE:" + str(x) + " " + str(y)
-        if(x<self.VerticalAxis):
+        if (x<self.VerticalAxis):
             if(y<self.HorizontalAxis):
                 self.setLeft()
             else:
                 self.setTop()
+        elif (y<self.HorizontalAxis):
+            self.setPerspective()
         else:
-            if(y<self.HorizontalAxis):
-                self.setPerspective()
-            else:
-                self.setFront()
+            self.setFront()
 
     def MouseTell(self,buttonCode):
         self.MouseButton=buttonCode
@@ -474,7 +473,7 @@ class QuadView(DirectObject):
         y=base.mouseWatcherNode.getMouseY()
 
         #Perspective and Front
-        if(self.CurrentQuad==4 or self.CurrentQuad==1):
+        if self.CurrentQuad in [4, 1]:
             x1=abs(x-self.VerticalAxis)
             w1=abs(1-self.VerticalAxis)
             x2=x1*2.0/w1
@@ -482,14 +481,14 @@ class QuadView(DirectObject):
 
 
         #Left and top
-        if(self.CurrentQuad==2 or self.CurrentQuad==3):
+        if self.CurrentQuad in [2, 3]:
             x1=abs(x-(-1.0))
             w1=abs(self.VerticalAxis-(-1.0))
             x2=x1*2.0/w1
             ansX=-1.0+x2
 
         #Left and Perspective
-        if(self.CurrentQuad==4 or self.CurrentQuad==3):
+        if self.CurrentQuad in [4, 3]:
             y1=abs(y-(-1.0))
             h1=abs(self.HorizontalAxis-(-1.0))
             y2=y1*2.0/h1
@@ -497,7 +496,7 @@ class QuadView(DirectObject):
 
 
         #Front and top
-        if(self.CurrentQuad==1 or self.CurrentQuad==2):
+        if self.CurrentQuad in [1, 2]:
             y1=abs(y-self.HorizontalAxis)
             h1=abs(1.0-self.HorizontalAxis)
             y2=y1*2.0/h1
@@ -589,35 +588,31 @@ class QuadView(DirectObject):
         self.diffX=self.currX-self.oldX
         self.diffY=self.currY-self.oldY
 
-        if(self.ControlPressed): # Change Size of the ViewPorts
+        if self.ControlPressed: # Change Size of the ViewPorts
         #if(base.getControl()):
-             self.VerticalAxis=self.currX
-             self.HorizontalAxis=self.currY
-             if(self.HorizontalAxis<-1 or self.HorizontalAxis>1 or self.VerticalAxis<-1 or self.VerticalAxis>1):
-                 return
-             self.resizedr(self.VerticalAxis,self.HorizontalAxis)
+            self.VerticalAxis=self.currX
+            self.HorizontalAxis=self.currY
+            if(self.HorizontalAxis<-1 or self.HorizontalAxis>1 or self.VerticalAxis<-1 or self.VerticalAxis>1):
+                return
+            self.resizedr(self.VerticalAxis,self.HorizontalAxis)
 
-        #if(self.AltPressed): # View Camera Transforms -> Maya style
-        elif(1):
+        else:
             #print "ALTPRESSED"
             if(self.PanConstantX<4096):
                 self.PanConstantX= self.PanConstantX * 2
                 self.PanConstantY= self.PanConstantY * 2
             self.ZoomConstant= self.ZoomConstant + 50
-            if(self.MouseButton==1): # TrackBall rotation only for Perspective View
-                if(self.CurrentQuad==4):
-                    pass
-            elif(self.MouseButton==2): # Do Panning
-                if(self.CurrentQuad==1): # Y and Z values change meanings for different cameras
+            if (self.MouseButton==1): # TrackBall rotation only for Perspective View
+                pass
+            elif self.MouseButton==2: # Do Panning
+                if (self.CurrentQuad==1): # Y and Z values change meanings for different cameras
                     self.MoveCamera(-self.diffX*self.PanConstantX,0,-self.diffY*self.PanConstantY,self.CurrentQuad)
                 elif(self.CurrentQuad==2):
                     self.MoveCamera(-self.diffX*self.PanConstantX,-self.diffY*self.PanConstantY,0,self.CurrentQuad)
                 elif(self.CurrentQuad==3):
                     self.MoveCamera(0,self.diffX*self.PanConstantX,-self.diffY*self.PanConstantY,self.CurrentQuad)
-                elif(self.CurrentQuad==4):
-                    pass
-            elif(self.MouseButton==3): # Do Zoom
-                if(self.CurrentQuad==1): # Y and Z values change meanings for different cameras
+            elif self.MouseButton==3: # Do Zoom
+                if (self.CurrentQuad==1): # Y and Z values change meanings for different cameras
                     #lens = OrthographicLens()
                     #lens.setFilmSize(l,self.VP_height*200)
                     #lens.setFilmOffset((self.VP_X2 + self.VP_X1) * 0.5, (self.VP_Y2 + self.VP_Y1) * 0.5)
@@ -647,11 +642,6 @@ class QuadView(DirectObject):
                     self.LeftHeight= self.LeftHeight + self.diffY
                     self.leftCam.node().getLens().setFilmSize(self.LeftWidth,self.LeftHeight)
                     self.resizedr(self.VerticalAxis,self.HorizontalAxis)
-                elif(self.CurrentQuad==4):
-                    pass
-        else:
-             pass
-
         self.oldX=self.currX
         self.oldY=self.currY
         return Task.cont

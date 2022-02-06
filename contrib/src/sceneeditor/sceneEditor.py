@@ -106,9 +106,7 @@ class myLevelEditor(AppShell):
         self.parent = parent
         ## Check TkTool is activated! ##
         self.wantTK = config.GetBool('want-tk', 0)
-        if self.wantTK:
-            pass
-        else:
+        if not self.wantTK:
             taskMgr.remove('tkloop')
             spawnTkLoop()
         ## Set up window frame
@@ -293,8 +291,6 @@ class myLevelEditor(AppShell):
         self.sideWindow.selectPage()
         messenger.send('SGE_Update Explorer',[render]) ## Update the Scene Graph
 
-        pass
-
     def getPhotoImage(self,name):
         modpath = ConfigVariableSearchPath("model-path")
         path = modpath.findFile(Filename(name))
@@ -334,9 +330,7 @@ class myLevelEditor(AppShell):
         self.image.append(self.getPhotoImage('models/icons/blank.gif'))
         self.image.append(self.getPhotoImage('models/icons/blank.gif'))
 
-        i = 0
-        for element in self.image:
-            i += 1
+        for i, element in enumerate(self.image, start=1):
             button = Button(buttonFrame, image = element, command=lambda n=i : self.buttonPushed(n))
             button.pack(fill=X, side = LEFT)
 
@@ -543,7 +537,6 @@ class myLevelEditor(AppShell):
         #################################################################
         if taskMgr.hasTaskNamed('seMonitorSelectedNode'):
                 taskMgr.remove('seMonitorSelectedNode')
-        pass
 
     def closeAllSubWindows(self):
         #################################################################
@@ -669,7 +662,6 @@ class myLevelEditor(AppShell):
         name = nodePath.getName()
         if name not in self.propertyWindow:
             self.propertyWindow[name] = propertyWindow(nodePath, type,info )
-        pass
 
     def closePropertyWindow(self, name):
         if name in self.propertyWindow:
@@ -679,7 +671,6 @@ class myLevelEditor(AppShell):
     def openMetadataPanel(self,nodePath=None):
         print(nodePath)
         self.MetadataPanel=MetadataPanel(nodePath)
-        pass
 
     def duplicate(self, nodePath = None):
         #################################################################
@@ -689,7 +680,6 @@ class myLevelEditor(AppShell):
         print('----Duplication!!')
         if nodePath != None:
             self.duplicateWindow = duplicateWindow(nodePath = nodePath)
-        pass
 
     def remove(self, nodePath = None):
         #################################################################
@@ -700,8 +690,8 @@ class myLevelEditor(AppShell):
         # we will do deselect first then remove the certain node.
         #
         #################################################################
-        if nodePath==None:
-            if self.nodeSelected == None:
+        if nodePath is None:
+            if self.nodeSelected is None:
                 return
             nodePath = self.nodeSelected
         self.deSelectNode()
@@ -709,7 +699,6 @@ class myLevelEditor(AppShell):
             self.removeLight(nodePath)
         else:
             AllScene.removeObj(nodePath)
-        pass
 
     def addDummyNode(self, nodepath = None):
         #################################################################
@@ -722,7 +711,6 @@ class myLevelEditor(AppShell):
         #################################################################
         AllScene.addDummyNode(nodepath)
         self.makeDirty()
-        pass
 
     def addCollisionObj(self, nodepath = None):
         #################################################################
@@ -735,7 +723,6 @@ class myLevelEditor(AppShell):
         #
         #################################################################
         self.collisionWindow = collisionWindow(nodepath)
-        pass
 
     def setAsReparentTarget(self, nodepath = None):
         #################################################################
@@ -765,7 +752,7 @@ class myLevelEditor(AppShell):
         # This function will be call when user try to open a placer panel.
         # This call will only success if there is no other placer panel been activated
         #################################################################
-        if(self.placer==None):
+        if self.placer is None:
             self.placer = Placer()
             self.menuPanel.entryconfig('Placer Panel', state=DISABLED)
         return
@@ -798,16 +785,14 @@ class myLevelEditor(AppShell):
             else:
                 Actor = AllScene.getActor(name)
                 self.animPanel[name] = seAnimPanel.AnimPanel(aNode=Actor)
-                pass
 
     def openMoPathPanel(self, nodepath = None):
         #################################################################
         # openMoPathPanel(self, nodepath = None)
         # This function will open a Motion Path Recorder for you.
         #################################################################
-        if self.MopathPanel == None:
+        if self.MopathPanel is None:
             self.MopathPanel = MopathRecorder()
-        pass
 
     def mopathClosed(self):
         self.MopathPanel = None
@@ -850,7 +835,6 @@ class myLevelEditor(AppShell):
         else:
             AllScene.resetAll()
         self.parent.title('Scene Editor - New Scene')
-        pass
 
     def openScene(self):
         #################################################################
@@ -882,12 +866,12 @@ class myLevelEditor(AppShell):
 
         self.CurrentFileName = AllScene.loadScene()
 
-        if(self.CurrentFileName==None):
+        if self.CurrentFileName is None:
             return
 
         thefile=Filename(self.CurrentFileName)
         thedir=thefile.getFullpathWoExtension()
-        print("SCENE EDITOR::" + thedir)
+        print(f'SCENE EDITOR::{thedir}')
         self.CurrentDirName=thedir
         if self.CurrentFileName != None:
             self.parent.title('Scene Editor - '+ Filename.fromOsSpecific(self.CurrentFileName).getBasenameWoExtension())
@@ -901,7 +885,7 @@ class myLevelEditor(AppShell):
         self.sideWindow.quit()
 
         # Try to re-open the side window again
-        while self.sideWindow == None:
+        while self.sideWindow is None:
             wColor = base.getBackgroundColor()
             self.worldColor[0] = wColor.getX()
             self.worldColor[1] = wColor.getY()
@@ -926,20 +910,19 @@ class myLevelEditor(AppShell):
             self.Dirty=0
         else:
             self.saveAsScene()
-        pass
 
     def saveAsBam(self):
         fileName = tkFileDialog.asksaveasfilename(filetypes = [("BAM",".bam")],title = "Save Scenegraph as Bam file")
         theScene=render.find("**/Scene")
-        if not theScene is None:
+        if theScene is not None:
             theScene.writeBamFile(fileName)
         else:
-            render.writeBamFile(fileName+".bad")
+            render.writeBamFile(f'{fileName}.bad')
         print(" Scenegraph saved as :" +str(fileName))
 
     def loadFromBam(self):
         fileName = tkFileDialog.askopenfilename(filetypes = [("BAM",".bam")],title = "Load Scenegraph from Bam file")
-        if not fileName is None:
+        if fileName is not None:
             d=path(fileName)
             scene=loader.loadModel(d.relpath())
             scene.reparentTo(render)
@@ -968,62 +951,48 @@ class myLevelEditor(AppShell):
 
             return
         self.CurrentDirName=fileName
-        fileName=fileName+".py"
+        fileName = f'{fileName}.py'
         f=FileSaver()
         self.CurrentFileName=fileName
         f.SaveFile(AllScene,fileName,self.CurrentDirName,0)
         self.Dirty=0
         self.parent.title('Scene Editor - '+ Filename.fromOsSpecific(self.CurrentFileName).getBasenameWoExtension())
-        pass
 
     def loadModel(self):
-        #################################################################
-        # loadModel(self)
-        # This function will be called when user tries to load a model into the scene.
-        # Here we will pop-up a dialog to ask user which model file should be loaded in.
-        # Then, pass the path to dataHolder to load the model in.
-        #################################################################
-        modelFilename = askopenfilename(
-            defaultextension = '.egg',
-            filetypes = (('Egg Files', '*.egg'),
-                         ('Bam Files', '*.bam'),
-                         ('All files', '*')),
-            initialdir = '.',
-            title = 'Load New Model',
-            parent = self.parent)
-        if modelFilename:
+        if modelFilename := askopenfilename(
+            defaultextension='.egg',
+            filetypes=(
+                ('Egg Files', '*.egg'),
+                ('Bam Files', '*.bam'),
+                ('All files', '*'),
+            ),
+            initialdir='.',
+            title='Load New Model',
+            parent=self.parent,
+        ):
             self.makeDirty()
             if not AllScene.loadModel(modelFilename, Filename.fromOsSpecific(modelFilename)):
                 print('----Error! No Such Model File!')
-        pass
 
     def loadActor(self):
-        #################################################################
-        # loadActor(self)
-        # This function will be called when user tries to load an Actor into the scene.
-        # Here we will pop-up a dialog to ask user which Actor file should be loaded in.
-        # Then, pass the path to dataHolder to load the Actor in.
-        #################################################################
-        ActorFilename = askopenfilename(
-            defaultextension = '.egg',
-            filetypes = (('Egg Files', '*.egg'),
-                         ('Bam Files', '*.bam'),
-                         ('All files', '*')),
-            initialdir = '.',
-            title = 'Load New Actor',
-            parent = self.parent)
-
-
-        if ActorFilename:
+        if ActorFilename := askopenfilename(
+            defaultextension='.egg',
+            filetypes=(
+                ('Egg Files', '*.egg'),
+                ('Bam Files', '*.bam'),
+                ('All files', '*'),
+            ),
+            initialdir='.',
+            title='Load New Actor',
+            parent=self.parent,
+        ):
             self.makeDirty()
             if not AllScene.loadActor(ActorFilename, Filename.fromOsSpecific(ActorFilename)):
                 print('----Error! No Such Model File!')
-        pass
 
     def importScene(self):
         self.makeDirty()
         print('----God bless you Please Import!')
-        pass
 
 
     ## Take care those things under Edit nemu
@@ -1057,7 +1026,6 @@ class myLevelEditor(AppShell):
             if taskMgr.hasTaskNamed('seMonitorSelectedNode'):
                 taskMgr.remove('seMonitorSelectedNode')
             return
-        pass
 
     def addDummy(self):
         #################################################################
@@ -1069,7 +1037,6 @@ class myLevelEditor(AppShell):
         #
         #################################################################
         self.addDummyNode(self.nodeSelected)
-        pass
 
     def duplicateNode(self):
         #################################################################
@@ -1082,7 +1049,6 @@ class myLevelEditor(AppShell):
         #################################################################
         if self.nodeSelected!=None:
             self.duplicate(self.nodeSelected)
-        pass
 
     def removeNode(self):
         #################################################################
@@ -1094,7 +1060,6 @@ class myLevelEditor(AppShell):
         #
         ################################################################
         self.remove(self.nodeSelected)
-        pass
 
     def showObjProp(self):
         ################################################################
@@ -1106,7 +1071,6 @@ class myLevelEditor(AppShell):
         #
         ################################################################
         self.openPropertyPanel(self.nodeSelected)
-        pass
 
     def showCameraSetting(self):
         ################################################################
@@ -1118,7 +1082,6 @@ class myLevelEditor(AppShell):
         #
         ################################################################
         self.openPropertyPanel(camera)
-        pass
 
     def showRenderSetting(self):
         '''Currently, no idea what gonna pop-out here...'''
@@ -1158,7 +1121,6 @@ class myLevelEditor(AppShell):
         ################################################################
         if AllScene.isActor(self.nodeSelected):
             self.openAnimPanel(self.nodeSelected)
-        pass
 
     def openMopathPanel(self):
         ################################################################
@@ -1166,7 +1128,6 @@ class myLevelEditor(AppShell):
         # This function will create a Motion Path Recorder
         ################################################################
         MopathPanel = MopathRecorder()
-        pass
 
     def toggleParticleVisable(self, visable):
         ################################################################
@@ -1186,7 +1147,7 @@ class myLevelEditor(AppShell):
         # open the lighting panel here.
         # If there is already exist a lighting panel, then do nothing
         ################################################################
-        if self.lightingPanel==None:
+        if self.lightingPanel is None:
             self.lightingPanel = lightingPanel(AllScene.getLightList())
             self.menuPanel.entryconfig('Lighting Panel', state=DISABLED)
         return
@@ -1211,18 +1172,15 @@ class myLevelEditor(AppShell):
                 theeffect=AllScene.particleDict[effect]
             self.particlePanel=seParticlePanel.ParticlePanel(particleEffect=theeffect,effectsDict=AllScene.particleDict)
 
-        pass
-
     def closeParticlePanel(self):
         self.particlePanel = None
         return
 
     def openInputPanel(self):
-        if self.controllerPanel==None:
+        if self.controllerPanel is None:
             list = AllScene.getAllObjNameAsList()
             type, dataList = AllScene.getControlSetting()
             self.controllerPanel = controllerWindow(listOfObj = list, controlType = type, dataList = dataList)
-        pass
 
     def closeInputPanel(self):
         self.controllerPanel = None
@@ -1254,14 +1212,11 @@ class myLevelEditor(AppShell):
         return
 
     def startControl(self, controlType, dataList):
-        if not self.enableControl:
-            self.enableControl = True
-        else:
+        if self.enableControl:
             # Stop the current control setting first
             # Also this will make sure we won't catch wrong keyboard message
             self.stopControl(controlType)
-            self.enableControl = True
-
+        self.enableControl = True
         self.setControlSet(controlType, dataList)
         self.lastContorlTimer = globalClock.getFrameTime()
         if controlType == 'Keyboard':
@@ -1272,7 +1227,11 @@ class myLevelEditor(AppShell):
             for index in self.keyboardMapDict:
                 self.keyControlEventDict[index] = 0
                 self.accept(self.keyboardMapDict[index], lambda a = index:self.keyboardPushed(a))
-                self.accept(self.keyboardMapDict[index]+'-up', lambda a = index:self.keyboardReleased(a))
+                self.accept(
+                    f'{self.keyboardMapDict[index]}-up',
+                    lambda a=index: self.keyboardReleased(a),
+                )
+
         return
 
     def stopControl(self, controlType):
@@ -1282,7 +1241,7 @@ class myLevelEditor(AppShell):
             self.enableControl = False
             for index in self.keyboardMapDict:
                 self.ignore(self.keyboardMapDict[index])
-                self.ignore(self.keyboardMapDict[index]+'-up')
+                self.ignore(f'{self.keyboardMapDict[index]}-up')
             taskMgr.remove("KeyboardControlTask")
             self.transNodeKeyboard.removeNode()
         return
@@ -1338,12 +1297,11 @@ class myLevelEditor(AppShell):
         # side window.
         # It will also call seSession to select this node in order to keep data's consistency
         ################################################################
-        if nodePath==None:
+        if nodePath is None:
             self.isSelect = False
             self.nodeSelected =None
             if taskMgr.hasTaskNamed('seMonitorSelectedNode'):
                 taskMgr.remove('seMonitorSelectedNode')
-            return
         else:
             self.isSelect = True
             #if self.nodeSelected != None:
@@ -1363,8 +1321,7 @@ class myLevelEditor(AppShell):
                 self.oHpr = self.nodeSelected.getHpr()
                 self.oScale = self.nodeSelected.getScale()
                 taskMgr.add(self.monitorSelectedNodeTask, 'seMonitorSelectedNode')
-            return
-        pass
+        return
 
     def selectFromScene(self, nodePath=None, callBack=True):
         ################################################################
@@ -1374,12 +1331,11 @@ class myLevelEditor(AppShell):
         # Actually this will be called by seSession
         # The reason we make two selections is we don't want they call each other and never stop...
         ################################################################
-        if nodePath==None:
+        if nodePath is None:
             self.isSelect = False
             self.nodeSelected =None
             if taskMgr.hasTaskNamed('seMonitorSelectedNode'):
                 taskMgr.remove('seMonitorSelectedNode')
-            return
         else:
             self.isSelect = True
             #if self.nodeSelected != None:
@@ -1398,8 +1354,7 @@ class myLevelEditor(AppShell):
                 self.oHpr = self.nodeSelected.getHpr()
                 self.oScale = self.nodeSelected.getScale()
                 taskMgr.add(self.monitorSelectedNodeTask, 'seMonitorSelectedNode')
-            return
-        pass
+        return
 
     def monitorSelectedNodeTask(self, task):
         ################################################################
@@ -1516,7 +1471,6 @@ class myLevelEditor(AppShell):
                 Actor = AllScene.getActor(name)
                 Dict = AllScene.getBlendAnimAsDict(name)
                 self.animBlendPanel[name] = BlendAnimPanel(aNode=Actor, blendDict=Dict)
-                pass
         return
 
     def animBlendPanelSave(self, actorName, blendName, animNameA, animNameB, effect):
@@ -1568,10 +1522,11 @@ class myLevelEditor(AppShell):
         # In this function we will restore the change and let side window know
         # the hot-key ahs been pushed.
         ################################################################
-        if self.sideWindow != None:
-            self.sideWindow.toggleWidgetVisFromMainW()
-        else:
+        if self.sideWindow is None:
             self.widgetVis = (self.widgetVis+1)%2
+
+        else:
+            self.sideWindow.toggleWidgetVisFromMainW()
 
     def toggleBackface(self):
         ################################################################
@@ -1581,10 +1536,11 @@ class myLevelEditor(AppShell):
         # In this function we will restore the change and let side window know
         # the hot-key ahs been pushed.
         ################################################################
-        if self.sideWindow != None:
-            self.sideWindow.toggleBackfaceFromMainW()
-        else:
+        if self.sideWindow is None:
             self.backface = (self.backface+1)%2
+
+        else:
+            self.sideWindow.toggleBackfaceFromMainW()
 
     def toggleTexture(self):
         ################################################################
@@ -1594,10 +1550,11 @@ class myLevelEditor(AppShell):
         # In this function we will restore the change and let side window know
         # the hot-key ahs been pushed.
         ################################################################
-        if self.sideWindow != None:
-            self.sideWindow.toggleTextureFromMainW()
-        else:
+        if self.sideWindow is None:
             self.texture = (self.texture+1)%2
+
+        else:
+            self.sideWindow.toggleTextureFromMainW()
 
     def toggleWireframe(self):
         ################################################################
@@ -1607,10 +1564,11 @@ class myLevelEditor(AppShell):
         # In this function we will restore the change and let side window know
         # the hot-key ahs been pushed.
         ################################################################
-        if self.sideWindow != None:
-            self.sideWindow.toggleWireframeFromMainW()
-        else:
+        if self.sideWindow is None:
             self.wireframe = (self.wireframe+1)%2
+
+        else:
+            self.sideWindow.toggleWireframeFromMainW()
 
     def openAlignPanel(self, nodePath=None):
         name = nodePath.getName()
@@ -1655,7 +1613,7 @@ class myLevelEditor(AppShell):
     ### Event from Motion Path Panel
     def requestCurveList(self, nodePath,name):
         curveList = AllScene.getCurveList(nodePath)
-        messenger.send('curveListFor'+name, [curveList])
+        messenger.send(f'curveListFor{name}', [curveList])
 
 
     ## Steal from DirectSession...

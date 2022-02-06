@@ -12,7 +12,7 @@ class ForceGroup(DirectObject):
     def __init__(self, name=None):
         """__init__(self)"""
 
-        if (name == None):
+        if name is None:
             self.name = 'ForceGroup-%d' % ForceGroup.id
             ForceGroup.id += 1
         else:
@@ -83,10 +83,7 @@ class ForceGroup(DirectObject):
         return self.node.getNumForces()
 
     def asList(self):
-        l = []
-        for i in range(self.node.getNumForces()):
-            l.append(self.node.getForce(i))
-        return l
+        return [self.node.getForce(i) for i in range(self.node.getNumForces())]
 
     def printParams(self, file = sys.stdout, targ = 'self'):
         i1="    "
